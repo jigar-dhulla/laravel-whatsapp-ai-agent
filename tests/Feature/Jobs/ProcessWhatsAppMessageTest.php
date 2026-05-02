@@ -24,6 +24,7 @@ class ProcessWhatsAppMessageTest extends TestCase
         GenericAgent::fake(['Hello there!']);
 
         Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
             '*send*' => Process::result(exitCode: 0),
         ]);
 
@@ -53,6 +54,10 @@ class ProcessWhatsAppMessageTest extends TestCase
     {
         GenericAgent::fake(['']);
 
+        /** @var Wacli|\Mockery\MockInterface $wacli */
+        $wacli = $this->mock(Wacli::class);
+        $wacli->shouldReceive('waitUntilUnlocked')->once();
+
         $job = new ProcessWhatsAppMessage(
             chatJid: '111@s.whatsapp.net',
             chatName: null,
@@ -62,11 +67,11 @@ class ProcessWhatsAppMessageTest extends TestCase
             agentClass: GenericAgent::class,
         );
 
-        $job->handle(new Wacli);
+        $job->handle($wacli);
 
         GenericAgent::assertPrompted('hey agent');
 
-        Process::assertNothingRan();
+        $wacli->shouldNotHaveReceived('send');
     }
 
     public function test_it_passes_provider_override_to_prompt(): void
@@ -74,6 +79,7 @@ class ProcessWhatsAppMessageTest extends TestCase
         GenericAgent::fake(['Overridden provider reply']);
 
         Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
             '*send*' => Process::result(exitCode: 0),
         ]);
 
@@ -91,5 +97,68 @@ class ProcessWhatsAppMessageTest extends TestCase
         $job->handle(new Wacli);
 
         GenericAgent::assertPrompted('test');
+    }
+
+    public function test_it_checks_wacli_lock_status_before_processing(): void
+    {
+        GenericAgent::fake(['Reply']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '111@s.whatsapp.net',
+            chatName: 'Test',
+            senderJid: '222@s.whatsapp.net',
+            senderName: 'User',
+            body: 'test',
+            agentClass: GenericAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        GenericAgent::assertPrompted('test');
+        Process::assertRan(fn ($process) => str_contains(implode(' ', $process->command), 'doctor'));
+    }
+
+    public function test_it_waits_for_lock_to_be_released(): void
+    {
+        GenericAgent::fake(['Reply']);
+
+        $callCount = 0;
+        Process::fake(function ($process) use (&$callCount) {
+            $command = is_array($process->command) ? implode(' ', $process->command) : $process->command;
+
+            if (str_contains($command, 'doctor')) {
+                $callCount++;
+                // First call: lock held, second call: lock released
+                $lockHeld = $callCount <= 1;
+                return Process::result(
+                    output: json_encode(['success' => true, 'data' => ['lock_held' => $lockHeld]]),
+                    exitCode: 0
+                );
+            } elseif (str_contains($command, 'send')) {
+                return Process::result(exitCode: 0);
+            }
+
+            return Process::result(exitCode: 0);
+        });
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '111@s.whatsapp.net',
+            chatName: 'Test',
+            senderJid: '222@s.whatsapp.net',
+            senderName: 'User',
+            body: 'test',
+            agentClass: GenericAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        GenericAgent::assertPrompted('test');
+        // Should have called doctor at least twice (once for lock check, once when released)
+        $this->assertGreaterThanOrEqual(2, $callCount);
     }
 }

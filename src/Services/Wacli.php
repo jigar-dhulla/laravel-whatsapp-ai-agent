@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelWhatsApp\Services;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use RuntimeException;
 
@@ -43,6 +44,35 @@ class Wacli
         $data = $this->runJson(['doctor']);
 
         return is_array($data) ? $data : null;
+    }
+
+    /**
+     * Check if wacli is currently holding a sync lock.
+     */
+    public function isLockHeld(): bool
+    {
+        $data = $this->doctor();
+
+        return (bool) ($data['lock_held'] ?? false);
+    }
+
+    /**
+     * Poll wacli until the sync lock is released, or max attempts exceeded.
+     * If the lock is still held after max attempts, log a warning and proceed.
+     */
+    public function waitUntilUnlocked(int $maxAttempts = 30, int $sleepSeconds = 1): void
+    {
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            if (! $this->isLockHeld()) {
+                return;
+            }
+
+            sleep($sleepSeconds);
+        }
+
+        Log::warning('[whatsapp-agent] wacli lock still held after waiting; proceeding anyway', [
+            'waited_seconds' => $maxAttempts * $sleepSeconds,
+        ]);
     }
 
     /**

@@ -29,6 +29,8 @@ class ProcessWhatsAppMessage implements ShouldQueue
 
     public function handle(Wacli $wacli): void
     {
+        $wacli->waitUntilUnlocked();
+
         $agent = app($this->agentClass);
 
         $provider = $this->providerOverride !== null
