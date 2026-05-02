@@ -1,0 +1,258 @@
+# Laravel WhatsApp AI Agent
+
+An extension to the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) that adds WhatsApp as an agent interface. It polls a [wacli](https://github.com/steipete/wacli) SQLite database for new messages, routes them through your configured agents (any class that implements `Laravel\Ai\Contracts\Agent`), and sends replies back via the wacli binary.
+
+## Requirements
+
+- PHP 8.3+
+- Laravel 13.0+
+- `laravel/ai` ^0.6
+- [`wacli`](https://github.com/steipete/wacli) installed and authenticated on the host
+
+## Installation
+
+```bash
+composer require jigar-dhulla/laravel-whatsapp-ai-agent
+```
+
+The package registers itself automatically via Laravel's package auto-discovery.
+
+## Setup
+
+Run the setup command to detect your wacli binary and write paths to `.env`:
+
+```bash
+php artisan wa:setup
+```
+
+This will:
+1. Locate your wacli binary
+2. Run `wacli doctor` to detect your store directory
+3. Prompt for the wacli SQLite database path
+4. Write `WA_WACLI_BINARY`, `WA_WACLI_STORE`, and `WA_WACLI_DATABASE` to `.env`
+
+Then publish the config to customize your agents:
+
+```bash
+php artisan vendor:publish --tag=whatsapp-agent-config
+```
+
+This publishes `config/whatsapp-agent.php`, which includes a default `GenericAgent` ready to use. Edit the config to add your own agents or customize scopes and triggers.
+
+## Configuration
+
+### `config/whatsapp-agent.php`
+
+```php
+return [
+    'wacli' => [
+        'binary'   => env('WA_WACLI_BINARY', 'wacli'),
+        'database' => env('WA_WACLI_DATABASE'),
+        'store'    => env('WA_WACLI_STORE'),
+    ],
+
+    /*
+    | One entry per agent. The agent key must be a class that implements
+    | Laravel\Ai\Contracts\Agent (use the Promptable trait for the full SDK
+    | feature set). Provider and model are optional runtime overrides; if null,
+    | the agent class resolves them via its own #[Provider]/#[Model] attributes
+    | or config/ai.php defaults.
+    |
+    | - triggers: [] matches every message in this agent's scope
+    | - chats/groups: at least one entry total — empty scope = inactive agent
+    */
+    'agents' => [
+        [
+            'agent'    => \LaravelWhatsApp\Agents\GenericAgent::class,
+            'provider' => env('WA_AGENT_PROVIDER'),
+            'model'    => env('WA_AGENT_MODEL'),
+            'triggers' => [],
+            'chats'    => [],
+            'groups'   => [],
+        ],
+    ],
+
+    'polling' => [
+        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 5),
+    ],
+];
+```
+
+**AI provider configuration (API keys, default models) belongs in `config/ai.php`**, managed by `laravel/ai` — not in this package.
+
+### Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `WA_WACLI_BINARY` | `wacli` | Path to the wacli binary |
+| `WA_WACLI_DATABASE` | — | Path to the wacli SQLite database (set by `wa:setup`) |
+| `WA_WACLI_STORE` | — | Path to the wacli store directory (set by `wa:setup`) |
+| `WA_AGENT_PROVIDER` | — | Optional: AI provider override for the default agent (e.g. `anthropic`, `openai`) |
+| `WA_AGENT_MODEL` | — | Optional: Model identifier override for the default agent |
+| `WA_POLLING_INTERVAL` | `5` | Seconds between database polls |
+
+## Agents
+
+Agents are standard Laravel AI SDK agents. Any class that implements `Laravel\Ai\Contracts\Agent` and uses the `Promptable` trait works. Here's an example:
+
+```php
+<?php
+
+namespace App\Ai\Agents;
+
+use Laravel\Ai\Attributes\Model;
+use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Contracts\HasTools;
+use Laravel\Ai\Messages\Message;
+use Laravel\Ai\Promptable;
+use Stringable;
+
+#[Provider('anthropic')]
+#[Model('claude-opus-4-7')]
+class SupportAgent implements Agent, Conversational, HasTools
+{
+    use Promptable;
+
+    public function instructions(): Stringable|string
+    {
+        return 'You are a customer support agent for Acme Corp. Be concise and friendly.';
+    }
+
+    /** @return Message[] */
+    public function messages(): iterable
+    {
+        return [];
+    }
+
+    /** @return \Laravel\Ai\Contracts\Tool[] */
+    public function tools(): iterable
+    {
+        return [];
+    }
+}
+```
+
+You can add any capability the Laravel AI SDK supports — tools, conversation history, structured output, middleware, failover — because these are plain SDK agents. The `#[Provider]` and `#[Model]` attributes can be omitted to fall back to your `config/ai.php` defaults.
+
+### Creating Custom Agents
+
+Generate a new agent with `make:agent`:
+
+```bash
+php artisan make:agent CustomAgent
+```
+
+This creates `app/Ai/Agents/CustomAgent.php`. Then add it to your published `config/whatsapp-agent.php`:
+
+```php
+'agents' => [
+    [
+        'agent'    => \App\Ai\Agents\CustomAgent::class,
+        'provider' => null,  // optional override
+        'model'    => null,  // optional override
+        'triggers' => ['@custom'],
+        'chats'    => ['111@s.whatsapp.net'],
+        'groups'   => [],
+    ],
+],
+```
+
+You can keep the default `GenericAgent` in the config alongside your custom agents, or remove it entirely.
+
+### Multiple Agents
+
+One message can match multiple agents simultaneously. Each match dispatches an independent queued job, so agents process in parallel:
+
+```php
+// config/whatsapp-agent.php
+'agents' => [
+    [
+        'agent'    => \App\Ai\Agents\SupportAgent::class,
+        'triggers' => ['@support'],
+        'chats'    => ['111@s.whatsapp.net'],
+        'groups'   => ['group1@g.us'],
+    ],
+    [
+        'agent'    => \App\Ai\Agents\SalesAgent::class,
+        'triggers' => ['@sales'],
+        'chats'    => ['111@s.whatsapp.net'],
+        'groups'   => [],
+    ],
+    [
+        'agent'    => \App\Ai\Agents\BroadcastAgent::class,
+        'triggers' => [],  // empty = matches all messages in scope
+        'chats'    => [],
+        'groups'   => ['announcements@g.us'],
+    ],
+],
+```
+
+**Routing rules:**
+- A message matches an agent when its chat/group JID is in the agent's `chats` or `groups` list **and** the body contains at least one trigger phrase (case-insensitive).
+- An empty `triggers` array matches every message in scope.
+- An agent with empty `chats` **and** empty `groups` is inactive and never fires.
+
+## Usage
+
+### Start the listener
+
+```bash
+php artisan wa:listen
+```
+
+Runs an infinite polling loop. Each iteration syncs new wacli messages, routes them via `AgentRouter`, and dispatches one `ProcessWhatsAppMessage` job per matched agent.
+
+```bash
+php artisan wa:listen --once          # single iteration, then exit
+php artisan wa:listen --max-iterations=10
+php artisan wa:listen -vv             # show startup config summary
+php artisan wa:listen -vvv            # show each message scanned
+```
+
+### Check agent status
+
+```bash
+php artisan wa:status
+```
+
+Shows wacli auth/connection state and a summary of every configured agent — class name, provider/model, triggers, and scope.
+
+### Queue worker
+
+Each matched message dispatches a `ProcessWhatsAppMessage` job. Run a queue worker alongside the listener:
+
+```bash
+php artisan queue:work
+```
+
+## How It Works
+
+```
+wacli sync  →  SQLite DB  →  WhatsAppMessageReader  →  AgentRouter
+                                                              ↓ (one job per match)
+                                                  ProcessWhatsAppMessage (queued)
+                                                              ↓
+                                                      $agent->prompt($body)
+                                                              ↓
+                                                        wacli send text
+```
+
+1. `wa:listen` calls `wacli sync --once --idle-exit 5s` each iteration.
+2. `WhatsAppMessageReader` fetches rows newer than the last processed rowid, filtered to the union of all agents' JIDs.
+3. `AgentRouter::match($chatJid, $body)` returns every agent config entry whose scope contains the chat and whose triggers match the message.
+4. One `ProcessWhatsAppMessage` job is dispatched per matched entry.
+5. The job resolves the agent class from the container, calls `$agent->prompt($body, provider: ..., model: ...)`, and sends the reply via `wacli send text`.
+
+## Testing
+
+```bash
+composer install
+vendor/bin/phpunit
+vendor/bin/pint
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).

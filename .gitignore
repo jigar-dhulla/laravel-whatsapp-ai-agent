@@ -1,0 +1,11 @@
+build
+composer.lock
+docs
+vendor
+.php_cs.cache
+.phpunit.result.cache
+.php-cs-fixer.cache
+composer.phar
+AGENTS.md
+CLAUDE.md
+.phpunit.cache
