@@ -75,6 +75,7 @@ class ProcessWhatsAppMessage implements ShouldQueue
             Log::warning('[whatsapp-agent] wacli send error: '.$errorOutput, [
                 'chat_jid' => $this->chatJid,
             ]);
+            $this->fail();
         }
     }
 }
