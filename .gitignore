@@ -6,6 +6,7 @@ vendor
 .phpunit.result.cache
 .php-cs-fixer.cache
 composer.phar
-AGENTS.md
-CLAUDE.md
 .phpunit.cache
+.idea
+.claude
+CLAUDE.md
