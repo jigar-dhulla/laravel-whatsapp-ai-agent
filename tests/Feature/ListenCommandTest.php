@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Schema;
-use LaravelWhatsApp\Agents\GenericAgent;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
 use LaravelWhatsApp\Services\WhatsAppMessageReader;
 use LaravelWhatsApp\Tests\TestCase;
@@ -28,7 +28,7 @@ class ListenCommandTest extends TestCase
     public function test_it_fails_early_when_all_agents_have_empty_scope(): void
     {
         config()->set('whatsapp-agent.agents', [[
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'provider' => 'anthropic',
             'model' => 'claude-opus-4-7',
             'triggers' => [],
@@ -46,7 +46,7 @@ class ListenCommandTest extends TestCase
         $this->seedSchema();
 
         config()->set('whatsapp-agent.agents', [[
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'provider' => 'anthropic',
             'model' => 'claude-opus-4-7',
             'triggers' => ['agent'],
@@ -74,7 +74,7 @@ class ListenCommandTest extends TestCase
             ->assertExitCode(0);
 
         Bus::assertDispatched(ProcessWhatsAppMessage::class, function ($job) {
-            return $job->body === 'hey agent' && $job->agentClass === GenericAgent::class;
+            return $job->body === 'hey agent' && $job->agentClass === WhatsAppAgent::class;
         });
     }
 
@@ -84,7 +84,7 @@ class ListenCommandTest extends TestCase
 
         config()->set('whatsapp-agent.agents', [
             [
-                'agent' => GenericAgent::class,
+                'agent' => WhatsAppAgent::class,
                 'provider' => 'anthropic',
                 'model' => 'claude-opus-4-7',
                 'triggers' => ['agent'],
@@ -92,7 +92,7 @@ class ListenCommandTest extends TestCase
                 'groups' => [],
             ],
             [
-                'agent' => GenericAgent::class,
+                'agent' => WhatsAppAgent::class,
                 'provider' => 'openai',
                 'model' => 'gpt-4o',
                 'triggers' => ['agent'],

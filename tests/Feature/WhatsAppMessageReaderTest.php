@@ -8,7 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use LaravelWhatsApp\Agents\GenericAgent;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Services\AgentRouter;
 use LaravelWhatsApp\Services\WhatsAppMessageReader;
 use LaravelWhatsApp\Tests\TestCase;
@@ -43,7 +43,7 @@ class WhatsAppMessageReaderTest extends TestCase
     public function test_fetch_new_returns_messages_above_the_last_processed_rowid(): void
     {
         config()->set('whatsapp-agent.agents', [[
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'chats' => ['111@s.whatsapp.net'],
             'groups' => [],
         ]]);
@@ -63,7 +63,7 @@ class WhatsAppMessageReaderTest extends TestCase
     public function test_fetch_new_filters_out_outbound_and_unscoped_messages(): void
     {
         config()->set('whatsapp-agent.agents', [[
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'chats' => ['111@s.whatsapp.net'],
             'groups' => [],
         ]]);

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LaravelWhatsApp\Tests\Unit;
 
-use LaravelWhatsApp\Agents\GenericAgent;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Services\AgentRouter;
 use LaravelWhatsApp\Tests\TestCase;
 
@@ -13,7 +13,7 @@ class AgentRouterTest extends TestCase
     private function agent(array $overrides = []): array
     {
         return array_merge([
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'provider' => 'anthropic',
             'model' => 'claude-opus-4-7',
             'triggers' => ['@agent'],

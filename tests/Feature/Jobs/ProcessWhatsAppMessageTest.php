@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace LaravelWhatsApp\Tests\Feature\Jobs;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Process;
-use LaravelWhatsApp\Agents\GenericAgent;
+use Illuminate\Support\Facades\Schema;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
 use LaravelWhatsApp\Services\Wacli;
+use LaravelWhatsApp\Services\WhatsAppMessageReader;
 use LaravelWhatsApp\Tests\TestCase;
+use Mockery\MockInterface;
 
 class ProcessWhatsAppMessageTest extends TestCase
 {
@@ -17,11 +21,31 @@ class ProcessWhatsAppMessageTest extends TestCase
         parent::setUp();
 
         Process::preventStrayProcesses();
+
+        config()->set('database.connections.'.WhatsAppMessageReader::CONNECTION_NAME, [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'foreign_key_constraints' => false,
+        ]);
+
+        Schema::connection(WhatsAppMessageReader::CONNECTION_NAME)->create('messages', function (Blueprint $table) {
+            $table->bigIncrements('rowid');
+            $table->string('chat_jid');
+            $table->string('chat_name')->nullable();
+            $table->string('msg_id');
+            $table->string('sender_jid')->nullable();
+            $table->string('sender_name')->nullable();
+            $table->bigInteger('ts');
+            $table->boolean('from_me');
+            $table->text('text')->nullable();
+            $table->text('display_text')->nullable();
+            $table->string('media_type')->nullable();
+        });
     }
 
     public function test_it_calls_agent_and_sends_reply_via_wacli(): void
     {
-        GenericAgent::fake(['Hello there!']);
+        WhatsAppAgent::fake(['Hello there!']);
 
         Process::fake([
             '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
@@ -34,12 +58,12 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderJid: '111@s.whatsapp.net',
             senderName: 'Alice',
             body: 'hey agent',
-            agentClass: GenericAgent::class,
+            agentClass: WhatsAppAgent::class,
         );
 
         $job->handle(new Wacli);
 
-        GenericAgent::assertPrompted('hey agent');
+        WhatsAppAgent::assertPrompted('hey agent');
 
         Process::assertRan(function ($process) {
             $command = is_array($process->command)
@@ -52,9 +76,9 @@ class ProcessWhatsAppMessageTest extends TestCase
 
     public function test_it_skips_wacli_send_when_agent_returns_empty_reply(): void
     {
-        GenericAgent::fake(['']);
+        WhatsAppAgent::fake(['']);
 
-        /** @var Wacli|\Mockery\MockInterface $wacli */
+        /** @var Wacli|MockInterface $wacli */
         $wacli = $this->mock(Wacli::class);
         $wacli->shouldReceive('waitUntilUnlocked')->once();
 
@@ -64,19 +88,19 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderJid: null,
             senderName: null,
             body: 'hey agent',
-            agentClass: GenericAgent::class,
+            agentClass: WhatsAppAgent::class,
         );
 
         $job->handle($wacli);
 
-        GenericAgent::assertPrompted('hey agent');
+        WhatsAppAgent::assertPrompted('hey agent');
 
         $wacli->shouldNotHaveReceived('send');
     }
 
     public function test_it_passes_provider_override_to_prompt(): void
     {
-        GenericAgent::fake(['Overridden provider reply']);
+        WhatsAppAgent::fake(['Overridden provider reply']);
 
         Process::fake([
             '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
@@ -89,19 +113,19 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderJid: null,
             senderName: null,
             body: 'test',
-            agentClass: GenericAgent::class,
+            agentClass: WhatsAppAgent::class,
             providerOverride: 'anthropic',
             modelOverride: 'claude-opus-4-7',
         );
 
         $job->handle(new Wacli);
 
-        GenericAgent::assertPrompted('test');
+        WhatsAppAgent::assertPrompted('test');
     }
 
     public function test_it_checks_wacli_lock_status_before_processing(): void
     {
-        GenericAgent::fake(['Reply']);
+        WhatsAppAgent::fake(['Reply']);
 
         Process::fake([
             '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
@@ -114,18 +138,18 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderJid: '222@s.whatsapp.net',
             senderName: 'User',
             body: 'test',
-            agentClass: GenericAgent::class,
+            agentClass: WhatsAppAgent::class,
         );
 
         $job->handle(new Wacli);
 
-        GenericAgent::assertPrompted('test');
+        WhatsAppAgent::assertPrompted('test');
         Process::assertRan(fn ($process) => str_contains(implode(' ', $process->command), 'doctor'));
     }
 
     public function test_it_waits_for_lock_to_be_released(): void
     {
-        GenericAgent::fake(['Reply']);
+        WhatsAppAgent::fake(['Reply']);
 
         $callCount = 0;
         Process::fake(function ($process) use (&$callCount) {
@@ -135,6 +159,7 @@ class ProcessWhatsAppMessageTest extends TestCase
                 $callCount++;
                 // First call: lock held, second call: lock released
                 $lockHeld = $callCount <= 1;
+
                 return Process::result(
                     output: json_encode(['success' => true, 'data' => ['lock_held' => $lockHeld]]),
                     exitCode: 0
@@ -152,12 +177,12 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderJid: '222@s.whatsapp.net',
             senderName: 'User',
             body: 'test',
-            agentClass: GenericAgent::class,
+            agentClass: WhatsAppAgent::class,
         );
 
         $job->handle(new Wacli);
 
-        GenericAgent::assertPrompted('test');
+        WhatsAppAgent::assertPrompted('test');
         // Should have called doctor at least twice (once for lock check, once when released)
         $this->assertGreaterThanOrEqual(2, $callCount);
     }

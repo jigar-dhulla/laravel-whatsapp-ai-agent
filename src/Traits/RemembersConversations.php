@@ -62,7 +62,8 @@ trait RemembersConversations
             ->get()
             ->map(function (WhatsAppMessage $message) {
                 return new Message($this->determineMessageRole($message), $message->display_text ?? $message->text);
-            });
+            })
+            ->all();
     }
 
     /**

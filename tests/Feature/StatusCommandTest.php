@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Support\Facades\Process;
-use LaravelWhatsApp\Agents\GenericAgent;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Tests\TestCase;
 
 class StatusCommandTest extends TestCase
@@ -28,7 +28,7 @@ class StatusCommandTest extends TestCase
 
         config()->set('whatsapp-agent.agents', [
             [
-                'agent' => GenericAgent::class,
+                'agent' => WhatsAppAgent::class,
                 'provider' => 'anthropic',
                 'model' => 'claude-opus-4-7',
                 'triggers' => ['@agent'],
@@ -40,7 +40,7 @@ class StatusCommandTest extends TestCase
         $this->artisan('wa:status')
             ->assertExitCode(0)
             ->expectsOutputToContain('/tmp/.wacli')
-            ->expectsOutputToContain('GenericAgent')
+            ->expectsOutputToContain('WhatsAppAgent')
             ->expectsOutputToContain('anthropic / claude-opus-4-7')
             ->expectsOutputToContain('@agent');
     }
@@ -63,7 +63,7 @@ class StatusCommandTest extends TestCase
         Process::fake(['*doctor*' => Process::result(exitCode: 1)]);
 
         config()->set('whatsapp-agent.agents', [[
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'provider' => null,
             'model' => null,
             'triggers' => [],
