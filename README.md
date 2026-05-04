@@ -1,5 +1,10 @@
 # Laravel WhatsApp AI Agent
 
+[![Tests](https://github.com/jigar-dhulla/laravel-whatsapp-ai-agent/actions/workflows/tests.yml/badge.svg)](https://github.com/jigar-dhulla/laravel-whatsapp-ai-agent/actions/workflows/tests.yml)
+[![Lint](https://github.com/jigar-dhulla/laravel-whatsapp-ai-agent/actions/workflows/lint.yml/badge.svg)](https://github.com/jigar-dhulla/laravel-whatsapp-ai-agent/actions/workflows/lint.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/jigar-dhulla/laravel-whatsapp-ai-agent.svg)](https://packagist.org/packages/jigar-dhulla/laravel-whatsapp-ai-agent)
+[![License](https://img.shields.io/github/license/jigar-dhulla/laravel-whatsapp-ai-agent.svg)](LICENSE)
+
 An extension to the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) that adds WhatsApp as an agent interface. It polls a [wacli](https://github.com/steipete/wacli) SQLite database for new messages, routes them through your configured agents (any class that implements `Laravel\Ai\Contracts\Agent`), and sends replies back via the wacli binary.
 
 ## Requirements
