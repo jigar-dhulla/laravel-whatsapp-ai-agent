@@ -25,7 +25,7 @@ class ListenCommandTest extends TestCase
             ->expectsOutputToContain('vendor:publish');
     }
 
-    public function test_it_fails_early_when_all_agents_have_empty_scope(): void
+    public function test_it_exits_successfully_with_warning_when_all_agents_have_empty_scope(): void
     {
         config()->set('whatsapp-agent.agents', [[
             'agent' => WhatsAppAgent::class,
@@ -37,7 +37,7 @@ class ListenCommandTest extends TestCase
         ]]);
 
         $this->artisan('wa:listen')
-            ->assertExitCode(1)
+            ->assertExitCode(0)
             ->expectsOutputToContain('whatsapp-agent.php');
     }
 

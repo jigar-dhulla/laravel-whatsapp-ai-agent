@@ -33,11 +33,11 @@ class ListenCommand extends Command
         $router = AgentRouter::fromConfig();
 
         if ($router->allowedJids() === []) {
-            $this->components->error(
+            $this->components->warn(
                 'All configured agents have empty scope (no chats or groups). Edit config/whatsapp-agent.php to configure agent scopes.'
             );
 
-            return self::FAILURE;
+            return self::SUCCESS;
         }
 
         $interval = max(1, (int) config('whatsapp-agent.polling.interval_seconds', 5));
