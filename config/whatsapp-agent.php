@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-use LaravelWhatsApp\Agents\GenericAgent;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 
 return [
 
@@ -47,7 +47,7 @@ return [
 
     'agents' => [
         [
-            'agent' => GenericAgent::class,
+            'agent' => WhatsAppAgent::class,
             'provider' => env('WA_AGENT_PROVIDER'),
             'model' => env('WA_AGENT_MODEL'),
             'triggers' => [],

@@ -10,7 +10,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Enums\Lab;
+use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Services\Wacli;
+use LaravelWhatsApp\Traits\RemembersConversations;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {
@@ -31,17 +33,19 @@ class ProcessWhatsAppMessage implements ShouldQueue
     {
         $wacli->waitUntilUnlocked();
 
+        /** @var WhatsAppAgent|RemembersConversations $agent */
         $agent = app($this->agentClass);
 
         $provider = $this->providerOverride !== null
             ? Lab::tryFrom($this->providerOverride)
             : null;
 
-        $response = $agent->prompt(
-            $this->body,
-            provider: $provider,
-            model: ($this->modelOverride !== null && $this->modelOverride !== '') ? $this->modelOverride : null,
-        );
+        $response = $agent->forChat($this->chatJid, $this->senderJid)
+            ->prompt(
+                $this->body,
+                provider: $provider,
+                model: ($this->modelOverride !== null && $this->modelOverride !== '') ? $this->modelOverride : null,
+            );
 
         $reply = $response->text;
 
