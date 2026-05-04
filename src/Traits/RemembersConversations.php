@@ -35,13 +35,16 @@ trait RemembersConversations
     }
 
     /**
-     * Continue an existing conversation as the given user.
+     * Resume the conversation from the most recent chat the given sender participated in.
      */
-    public function continueLastConversation(object $as): static
+    public function continueLastConversation(string $senderJid): static
     {
-        $this->senderJid = $as;
+        $this->senderJid = $senderJid;
 
-        $this->chatJid = WhatsAppMessage::query()->limit(1)->orderBy('ts', 'desc')->first()->chat_jid;
+        $this->chatJid = WhatsAppMessage::query()
+            ->where('sender_jid', $senderJid)
+            ->orderBy('ts', 'desc')
+            ->value('chat_jid');
 
         return $this;
     }

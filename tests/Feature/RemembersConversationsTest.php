@@ -67,6 +67,26 @@ class RemembersConversationsTest extends TestCase
         $this->assertSame([], $messages);
     }
 
+    public function test_continue_last_conversation_resolves_chat_for_sender(): void
+    {
+        $this->seedMessage(['rowid' => 1, 'chat_jid' => '111@s.whatsapp.net', 'sender_jid' => '222@s.whatsapp.net', 'ts' => 1700000000, 'from_me' => 0, 'text' => 'older']);
+        $this->seedMessage(['rowid' => 2, 'chat_jid' => '999@g.us', 'sender_jid' => '222@s.whatsapp.net', 'ts' => 1700000050, 'from_me' => 0, 'text' => 'newer']);
+        $this->seedMessage(['rowid' => 3, 'chat_jid' => '888@g.us', 'sender_jid' => 'someone-else@s.whatsapp.net', 'ts' => 1700000100, 'from_me' => 0, 'text' => 'unrelated']);
+
+        $agent = (new WhatsAppAgent)->continueLastConversation('222@s.whatsapp.net');
+
+        $this->assertSame('999@g.us', $agent->currentConversation());
+        $this->assertSame('222@s.whatsapp.net', $agent->conversationParticipant());
+    }
+
+    public function test_continue_last_conversation_leaves_chat_null_when_sender_has_no_history(): void
+    {
+        $agent = (new WhatsAppAgent)->continueLastConversation('nobody@s.whatsapp.net');
+
+        $this->assertNull($agent->currentConversation());
+        $this->assertSame('nobody@s.whatsapp.net', $agent->conversationParticipant());
+    }
+
     public function test_messages_returns_an_array_of_message_objects(): void
     {
         $this->seedMessage(['rowid' => 1, 'ts' => 1700000000, 'from_me' => 0, 'text' => 'hi']);
