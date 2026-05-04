@@ -37,7 +37,7 @@ Then publish the config to customize your agents:
 php artisan vendor:publish --tag=whatsapp-agent-config
 ```
 
-This publishes `config/whatsapp-agent.php`, which includes a default `GenericAgent` ready to use. Edit the config to add your own agents or customize scopes and triggers.
+This publishes `config/whatsapp-agent.php`, which includes a default `WhatsAppAgent` ready to use. Edit the config to add your own agents or customize scopes and triggers.
 
 ## Configuration
 
@@ -63,7 +63,7 @@ return [
     */
     'agents' => [
         [
-            'agent'    => \LaravelWhatsApp\Agents\GenericAgent::class,
+            'agent'    => \LaravelWhatsApp\Agents\WhatsAppAgent::class,
             'provider' => env('WA_AGENT_PROVIDER'),
             'model'    => env('WA_AGENT_MODEL'),
             'triggers' => [],
@@ -73,7 +73,7 @@ return [
     ],
 
     'polling' => [
-        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 5),
+        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 60),
     ],
 ];
 ```
@@ -89,7 +89,7 @@ return [
 | `WA_WACLI_STORE` | — | Path to the wacli store directory (set by `wa:setup`) |
 | `WA_AGENT_PROVIDER` | — | Optional: AI provider override for the default agent (e.g. `anthropic`, `openai`) |
 | `WA_AGENT_MODEL` | — | Optional: Model identifier override for the default agent |
-| `WA_POLLING_INTERVAL` | `5` | Seconds between database polls |
+| `WA_POLLING_INTERVAL` | `60` | Seconds between database polls |
 
 ## Agents
 
@@ -159,7 +159,7 @@ This creates `app/Ai/Agents/CustomAgent.php`. Then add it to your published `con
 ],
 ```
 
-You can keep the default `GenericAgent` in the config alongside your custom agents, or remove it entirely.
+You can keep the default `WhatsAppAgent` in the config alongside your custom agents, or remove it entirely.
 
 ### Multiple Agents
 
