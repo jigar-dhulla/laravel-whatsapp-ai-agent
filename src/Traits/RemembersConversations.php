@@ -15,9 +15,9 @@ trait RemembersConversations
     protected ?string $senderJid = null;
 
     /**
-     * Start a new conversation for the given user.
+     * Start a conversation in the given chat, optionally scoped to a sender JID.
      */
-    public function forChat($chatJid, $senderJid): static
+    public function forChat(string $chatJid, ?string $senderJid = null): static
     {
         $this->chatJid = $chatJid;
         $this->senderJid = $senderJid;
@@ -26,12 +26,12 @@ trait RemembersConversations
     }
 
     /**
-     * Continue an existing conversation as the given user.
+     * Continue an existing conversation in the given chat as the given sender.
      */
-    public function continue(string $chatJid, string $as): static
+    public function continue(string $chatJid, string $senderJid): static
     {
         $this->chatJid = $chatJid;
-        $this->senderJid = $as;
+        $this->senderJid = $senderJid;
 
         return $this;
     }
