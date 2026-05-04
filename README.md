@@ -95,6 +95,7 @@ return [
 | `WA_AGENT_PROVIDER` | — | Optional: AI provider override for the default agent (e.g. `anthropic`, `openai`) |
 | `WA_AGENT_MODEL` | — | Optional: Model identifier override for the default agent |
 | `WA_POLLING_INTERVAL` | `60` | Seconds between database polls |
+| `WA_HISTORY_LIMIT` | `100` | Max past messages included in agent context |
 
 ## Agents
 

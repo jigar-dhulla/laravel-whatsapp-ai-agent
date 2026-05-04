@@ -75,10 +75,11 @@ trait RemembersConversations
 
     /**
      * Get the maximum number of conversation messages to include in context.
+     * Override in your agent class to set a per-agent limit.
      */
     protected function maxConversationMessages(): int
     {
-        return 100;
+        return (int) config('whatsapp-agent.conversation.history_limit', 100);
     }
 
     /**

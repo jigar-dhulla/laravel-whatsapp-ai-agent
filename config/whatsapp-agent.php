@@ -70,4 +70,20 @@ return [
         'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 60),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Conversation History
+    |--------------------------------------------------------------------------
+    |
+    | Maximum number of past messages included in each agent's context window.
+    | The most recent N messages are fetched and provided as conversation
+    | history. Higher values give the agent more context but consume more
+    | tokens per request.
+    |
+    */
+
+    'conversation' => [
+        'history_limit' => (int) env('WA_HISTORY_LIMIT', 100),
+    ],
+
 ];
