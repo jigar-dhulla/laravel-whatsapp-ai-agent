@@ -1,0 +1,75 @@
+name: Bug report
+description: Report something that is broken or behaving unexpectedly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a bug report, please check the [CHANGELOG](../blob/main/CHANGELOG.md) and existing issues to see if this is already known.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps or code snippet that reliably reproduces the issue.
+      placeholder: |
+        1. Publish config and add agent with ...
+        2. Run `php artisan wa:listen --once`
+        3. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: input
+    id: package_version
+    attributes:
+      label: Package version
+      placeholder: "e.g. dev-main, 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: php_version
+    attributes:
+      label: PHP version
+      placeholder: "e.g. 8.3.10"
+    validations:
+      required: true
+
+  - type: input
+    id: laravel_version
+    attributes:
+      label: Laravel version
+      placeholder: "e.g. 13.5.0"
+    validations:
+      required: true
+
+  - type: input
+    id: wacli_version
+    attributes:
+      label: wacli version
+      description: Output of `wacli --version`
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste any relevant logs (redact personal data).
+      render: shell
