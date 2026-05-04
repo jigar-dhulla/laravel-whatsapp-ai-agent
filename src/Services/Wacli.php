@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Services;
 
+use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
 use JigarDhulla\LaravelWhatsApp\Exceptions\WacliException;
 use RuntimeException;
@@ -106,8 +107,8 @@ class Wacli
      */
     public function send(string $jid, string $message): array
     {
-        $result = Process::run([
-            $this->binary(), 'send', 'text',
+        $result = $this->runBinary([
+            'send', 'text',
             '--to', $jid,
             '--message', $message,
             '--json',
@@ -126,13 +127,7 @@ class Wacli
      */
     public function syncOnceExitIfIdleForFiveSeconds(): array
     {
-        $result = Process::timeout(30)->run([
-            $this->binary(),
-            'sync',
-            '--once',
-            '--idle-exit', '5s',
-            '--json',
-        ]);
+        $result = $this->runBinary(['sync', '--once', '--idle-exit', '5s', '--json'], timeout: 30);
 
         if (! $result->successful()) {
             return ['messages_stored' => 0, 'synced' => false];
@@ -152,12 +147,31 @@ class Wacli
         ];
     }
 
+    protected function runBinary(array $arguments, ?int $timeout = null): ProcessResult
+    {
+        $store = config('whatsapp-agent.wacli.store');
+
+        $command = [$this->binary()];
+
+        if ($store) {
+            $command = [...$command, '--store', $store];
+        }
+
+        $process = Process::command([...$command, ...$arguments]);
+
+        if ($timeout !== null) {
+            $process = $process->timeout($timeout);
+        }
+
+        return $process->run();
+    }
+
     /**
      * Run a wacli subcommand with `--json` and return the decoded `data` field.
      */
     protected function runJson(array $arguments): mixed
     {
-        $result = Process::run([$this->binary(), ...$arguments, '--json']);
+        $result = $this->runBinary([...$arguments, '--json']);
 
         if (! $result->successful()) {
             return null;
