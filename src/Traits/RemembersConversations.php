@@ -2,6 +2,7 @@
 
 namespace LaravelWhatsApp\Traits;
 
+use Laravel\Ai\Messages\Message;
 use LaravelWhatsApp\Models\WhatsAppMessage;
 
 trait RemembersConversations
@@ -56,7 +57,10 @@ trait RemembersConversations
         return WhatsAppMessage::query()
             ->limit($this->maxConversationMessages())
             ->orderBy('ts', 'desc')
-            ->get();
+            ->get()
+            ->map(function (WhatsAppMessage $message) {
+                return new Message($message->sender_jid, $message->display_text ?? $message->text);
+            });
     }
 
     /**
