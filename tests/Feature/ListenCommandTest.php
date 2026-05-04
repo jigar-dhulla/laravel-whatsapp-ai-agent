@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
-use Illuminate\Support\Facades\Schema;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
@@ -29,8 +27,6 @@ class ListenCommandTest extends TestCase
     {
         config()->set('whatsapp-agent.agents', [[
             'agent' => WhatsAppAgent::class,
-            'provider' => 'anthropic',
-            'model' => 'claude-opus-4-7',
             'triggers' => [],
             'chats' => [],
             'groups' => [],
@@ -47,8 +43,6 @@ class ListenCommandTest extends TestCase
 
         config()->set('whatsapp-agent.agents', [[
             'agent' => WhatsAppAgent::class,
-            'provider' => 'anthropic',
-            'model' => 'claude-opus-4-7',
             'triggers' => ['agent'],
             'chats' => ['111@s.whatsapp.net'],
             'groups' => [],
@@ -85,16 +79,12 @@ class ListenCommandTest extends TestCase
         config()->set('whatsapp-agent.agents', [
             [
                 'agent' => WhatsAppAgent::class,
-                'provider' => 'anthropic',
-                'model' => 'claude-opus-4-7',
                 'triggers' => ['agent'],
                 'chats' => ['111@s.whatsapp.net'],
                 'groups' => [],
             ],
             [
                 'agent' => WhatsAppAgent::class,
-                'provider' => 'openai',
-                'model' => 'gpt-4o',
                 'triggers' => ['agent'],
                 'chats' => ['111@s.whatsapp.net'],
                 'groups' => [],
@@ -124,24 +114,6 @@ class ListenCommandTest extends TestCase
 
     private function seedSchema(): void
     {
-        config()->set('database.connections.'.WhatsAppMessageReader::CONNECTION_NAME, [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'foreign_key_constraints' => false,
-        ]);
-
-        Schema::connection(WhatsAppMessageReader::CONNECTION_NAME)->create('messages', function (Blueprint $table) {
-            $table->bigIncrements('rowid');
-            $table->string('chat_jid');
-            $table->string('chat_name')->nullable();
-            $table->string('msg_id');
-            $table->string('sender_jid')->nullable();
-            $table->string('sender_name')->nullable();
-            $table->bigInteger('ts');
-            $table->boolean('from_me');
-            $table->text('text')->nullable();
-            $table->text('display_text')->nullable();
-            $table->string('media_type')->nullable();
-        });
+        $this->setUpWacliDatabase();
     }
 }

@@ -14,8 +14,6 @@ class AgentRouterTest extends TestCase
     {
         return array_merge([
             'agent' => WhatsAppAgent::class,
-            'provider' => 'anthropic',
-            'model' => 'claude-opus-4-7',
             'triggers' => ['@agent'],
             'chats' => ['111@s.whatsapp.net'],
             'groups' => [],
@@ -93,8 +91,8 @@ class AgentRouterTest extends TestCase
 
     public function test_multiple_agents_can_match_same_message(): void
     {
-        $agentA = $this->agent(['provider' => 'anthropic']);
-        $agentB = $this->agent(['provider' => 'openai']);
+        $agentA = $this->agent(['triggers' => ['@agent']]);
+        $agentB = $this->agent(['triggers' => []]);
 
         $router = new AgentRouter([$agentA, $agentB]);
 
@@ -113,7 +111,7 @@ class AgentRouterTest extends TestCase
         $matched = $router->match('111@s.whatsapp.net', 'hey @agent');
 
         $this->assertCount(1, $matched);
-        $this->assertSame('anthropic', $matched[0]['provider']);
+        $this->assertSame(['111@s.whatsapp.net'], $matched[0]['chats']);
     }
 
     public function test_allowed_jids_returns_deduped_union_of_all_agent_scopes(): void

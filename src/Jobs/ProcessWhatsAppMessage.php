@@ -11,7 +11,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
-use Laravel\Ai\Enums\Lab;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {
@@ -24,8 +23,6 @@ class ProcessWhatsAppMessage implements ShouldQueue
         public readonly ?string $senderName,
         public readonly string $body,
         public readonly string $agentClass,
-        public readonly ?string $providerOverride = null,
-        public readonly ?string $modelOverride = null,
     ) {}
 
     public function handle(Wacli $wacli): void
@@ -35,16 +32,8 @@ class ProcessWhatsAppMessage implements ShouldQueue
         /** @var WhatsAppAgent|RemembersWhatsAppConversations $agent */
         $agent = app($this->agentClass);
 
-        $provider = $this->providerOverride !== null
-            ? Lab::tryFrom($this->providerOverride)
-            : null;
-
         $response = $agent->forChat($this->chatJid, $this->senderJid)
-            ->prompt(
-                $this->body,
-                provider: $provider,
-                model: ($this->modelOverride !== null && $this->modelOverride !== '') ? $this->modelOverride : null,
-            );
+            ->prompt($this->body);
 
         $reply = $response->text;
 

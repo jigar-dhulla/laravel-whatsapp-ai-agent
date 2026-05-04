@@ -31,10 +31,9 @@ return [
     | whose scope (chats + groups) contains the sender's JID and whose triggers
     | match the message body.
     |
-    | - agent:    Laravel AI SDK Agent Class.
-    | - provider: Optional Lab enum string override (e.g. 'anthropic', 'openai').
-    |             Null defers to the agent class's #[Provider] attribute.
-    | - model:    Optional model identifier override. Null defers to #[Model].
+    | - agent:    Laravel AI SDK Agent Class. Configure provider, model, and
+    |             system prompt via the class's attributes and methods. See:
+    |             https://laravel.com/docs/13.x/ai-sdk#agent-configuration
     | - triggers: Phrases that activate this agent (case-insensitive substring
     |             match). Empty array matches every message in scope.
     | - chats:    DM JIDs this agent listens to. MUST be non-empty unless
@@ -48,8 +47,6 @@ return [
     'agents' => [
         [
             'agent' => WhatsAppAgent::class,
-            'provider' => env('WA_AGENT_PROVIDER'),
-            'model' => env('WA_AGENT_MODEL'),
             'triggers' => [],
             'chats' => [],
             'groups' => [],

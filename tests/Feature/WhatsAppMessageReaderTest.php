@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
@@ -19,25 +17,7 @@ class WhatsAppMessageReaderTest extends TestCase
     {
         parent::setUp();
 
-        config()->set('database.connections.'.WhatsAppMessageReader::CONNECTION_NAME, [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'foreign_key_constraints' => false,
-        ]);
-
-        Schema::connection(WhatsAppMessageReader::CONNECTION_NAME)->create('messages', function (Blueprint $table) {
-            $table->bigIncrements('rowid');
-            $table->string('chat_jid');
-            $table->string('chat_name')->nullable();
-            $table->string('msg_id');
-            $table->string('sender_jid')->nullable();
-            $table->string('sender_name')->nullable();
-            $table->bigInteger('ts');
-            $table->boolean('from_me');
-            $table->text('text')->nullable();
-            $table->text('display_text')->nullable();
-            $table->string('media_type')->nullable();
-        });
+        $this->setUpWacliDatabase();
     }
 
     public function test_fetch_new_returns_messages_above_the_last_processed_rowid(): void

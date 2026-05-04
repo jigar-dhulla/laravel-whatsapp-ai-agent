@@ -29,8 +29,6 @@ class StatusCommandTest extends TestCase
         config()->set('whatsapp-agent.agents', [
             [
                 'agent' => WhatsAppAgent::class,
-                'provider' => 'anthropic',
-                'model' => 'claude-opus-4-7',
                 'triggers' => ['@agent'],
                 'chats' => ['111@s.whatsapp.net'],
                 'groups' => [],
@@ -41,7 +39,6 @@ class StatusCommandTest extends TestCase
             ->assertExitCode(0)
             ->expectsOutputToContain('/tmp/.wacli')
             ->expectsOutputToContain('WhatsAppAgent')
-            ->expectsOutputToContain('anthropic / claude-opus-4-7')
             ->expectsOutputToContain('@agent');
     }
 
@@ -64,8 +61,6 @@ class StatusCommandTest extends TestCase
 
         config()->set('whatsapp-agent.agents', [[
             'agent' => WhatsAppAgent::class,
-            'provider' => null,
-            'model' => null,
             'triggers' => [],
             'chats' => [],
             'groups' => [],

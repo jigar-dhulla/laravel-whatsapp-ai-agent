@@ -38,12 +38,6 @@ class StatusCommand extends Command
                 class_basename((string) ($agent['agent'] ?? '?'))
             );
 
-            $providerModel = ($agent['provider'] !== null || $agent['model'] !== null)
-                ? trim(($agent['provider'] ?? '—').' / '.($agent['model'] ?? '—'), ' /')
-                : 'from class attributes';
-
-            $this->components->twoColumnDetail('    Provider / model', $providerModel);
-
             $triggers = implode(', ', (array) ($agent['triggers'] ?? [])) ?: '(all messages)';
             $this->components->twoColumnDetail('    Triggers', $triggers);
 

@@ -144,8 +144,6 @@ class ListenCommand extends Command
                     $message->sender_name !== null ? (string) $message->sender_name : null,
                     (string) $body,
                     (string) $agentConfig['agent'],
-                    isset($agentConfig['provider']) ? (string) $agentConfig['provider'] : null,
-                    isset($agentConfig['model']) ? (string) $agentConfig['model'] : null,
                 );
 
                 // -vv: show that a job was dispatched
@@ -171,10 +169,8 @@ class ListenCommand extends Command
         foreach ($agents as $i => $agent) {
             $label = sprintf('  Agent #%d', $i + 1);
             $detail = sprintf(
-                '%s — %s/%s — triggers: %s',
+                '%s — triggers: %s',
                 class_basename((string) ($agent['agent'] ?? '?')),
-                $agent['provider'] ?? 'from class',
-                $agent['model'] ?? 'from class',
                 implode(', ', (array) ($agent['triggers'] ?? [])) ?: '(all)',
             );
             $this->components->twoColumnDetail($label, $detail);

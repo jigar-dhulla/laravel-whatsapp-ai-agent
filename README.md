@@ -69,8 +69,6 @@ return [
     'agents' => [
         [
             'agent'    => \JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent::class,
-            'provider' => env('WA_AGENT_PROVIDER'),
-            'model'    => env('WA_AGENT_MODEL'),
             'triggers' => [],
             'chats'    => [],
             'groups'   => [],
@@ -97,51 +95,6 @@ return [
 | `WA_POLLING_INTERVAL` | `60` | Seconds between database polls |
 | `WA_HISTORY_LIMIT` | `100` | Max past messages included in agent context |
 
-## Agents
-
-Agents are standard Laravel AI SDK agents. Any class that implements `Laravel\Ai\Contracts\Agent` and uses the `Promptable` trait works. Here's an example:
-
-```php
-<?php
-
-namespace App\Ai\Agents;
-
-use Laravel\Ai\Attributes\Model;
-use Laravel\Ai\Attributes\Provider;
-use Laravel\Ai\Contracts\Agent;
-use Laravel\Ai\Contracts\Conversational;
-use Laravel\Ai\Contracts\HasTools;
-use Laravel\Ai\Messages\Message;
-use Laravel\Ai\Promptable;
-use Stringable;
-
-#[Provider('anthropic')]
-#[Model('claude-opus-4-7')]
-class SupportAgent implements Agent, Conversational, HasTools
-{
-    use Promptable;
-
-    public function instructions(): Stringable|string
-    {
-        return 'You are a customer support agent for Acme Corp. Be concise and friendly.';
-    }
-
-    /** @return Message[] */
-    public function messages(): iterable
-    {
-        return [];
-    }
-
-    /** @return \Laravel\Ai\Contracts\Tool[] */
-    public function tools(): iterable
-    {
-        return [];
-    }
-}
-```
-
-You can add any capability the Laravel AI SDK supports — tools, conversation history, structured output, middleware, failover — because these are plain SDK agents. The `#[Provider]` and `#[Model]` attributes can be omitted to fall back to your `config/ai.php` defaults.
-
 ### Creating Custom Agents
 
 Generate a new agent with `make:agent`:
@@ -156,8 +109,6 @@ This creates `app/Ai/Agents/CustomAgent.php`. Then add it to your published `con
 'agents' => [
     [
         'agent'    => \App\Ai\Agents\CustomAgent::class,
-        'provider' => null,  // optional override
-        'model'    => null,  // optional override
         'triggers' => ['@custom'],
         'chats'    => ['111@s.whatsapp.net'],
         'groups'   => [],
@@ -166,6 +117,25 @@ This creates `app/Ai/Agents/CustomAgent.php`. Then add it to your published `con
 ```
 
 You can keep the default `WhatsAppAgent` in the config alongside your custom agents, or remove it entirely.
+
+#### Conversation memory
+
+Add the `RemembersWhatsAppConversations` trait to your agent to give it access to the full message history from the wacli SQLite database. The trait implements the Laravel AI SDK's conversation interface, so previous messages in the chat are automatically injected as context on every prompt:
+
+```php
+use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Promptable;
+
+class CustomAgent implements Agent, Conversational
+{
+    use Promptable;
+    use RemembersWhatsAppConversations;
+}
+```
+
+The number of historical messages included is controlled by `WA_HISTORY_LIMIT` (default `100`). Override `maxConversationMessages()` in your agent class to set a per-agent limit.
 
 ### Multiple Agents
 
@@ -249,7 +219,11 @@ wacli sync  →  SQLite DB  →  WhatsAppMessageReader  →  AgentRouter
 2. `WhatsAppMessageReader` fetches rows newer than the last processed rowid, filtered to the union of all agents' JIDs.
 3. `AgentRouter::match($chatJid, $body)` returns every agent config entry whose scope contains the chat and whose triggers match the message.
 4. One `ProcessWhatsAppMessage` job is dispatched per matched entry.
-5. The job resolves the agent class from the container, calls `$agent->prompt($body, provider: ..., model: ...)`, and sends the reply via `wacli send text`.
+5. The job resolves the agent class from the container, calls `$agent->prompt($body)`, and sends the reply via `wacli send text`.
+
+## Known Limitations
+
+**Sync lock blocks replies** — `wacli sync` holds an exclusive lock, so `wacli send` cannot run concurrently. This package works around it by calling `waitUntilUnlocked()` before each send, but under heavy message load the reply may be delayed until the sync finishes. Native support for concurrent sync and send is being tracked in [steipete/wacli#6](https://github.com/steipete/wacli/issues/6).
 
 ## Testing
 
