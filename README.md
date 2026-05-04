@@ -12,7 +12,7 @@ An extension to the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) that adds 
 - PHP 8.3+
 - Laravel 13.0+
 - `laravel/ai` ^0.6
-- [`wacli`](https://github.com/steipete/wacli) installed and authenticated on the host
+- [`wacli`](https://github.com/steipete/wacli) **0.6.0+** installed and authenticated on the host
 
 ## Installation
 
@@ -89,7 +89,7 @@ return [
 
 | Variable | Default | Description |
 |---|---|---|
-| `WA_WACLI_BINARY` | `wacli` | Path to the wacli binary |
+| `WA_WACLI_BINARY` | `wacli` | Path to the wacli binary (0.6.0+ required) |
 | `WA_WACLI_DATABASE` | — | Path to the wacli SQLite database (set by `wa:setup`) |
 | `WA_WACLI_STORE` | — | Path to the wacli store directory (set by `wa:setup`) |
 | `WA_AGENT_PROVIDER` | — | Optional: AI provider override for the default agent (e.g. `anthropic`, `openai`) |
