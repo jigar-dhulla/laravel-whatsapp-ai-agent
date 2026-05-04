@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LaravelWhatsApp\Services;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
+use LaravelWhatsApp\Exceptions\WacliException;
 use RuntimeException;
 
 class Wacli
@@ -70,9 +70,7 @@ class Wacli
             sleep($sleepSeconds);
         }
 
-        Log::warning('[whatsapp-agent] wacli lock still held after waiting; proceeding anyway', [
-            'waited_seconds' => $maxAttempts * $sleepSeconds,
-        ]);
+        throw new WacliException('Could not get the lock');
     }
 
     /**
