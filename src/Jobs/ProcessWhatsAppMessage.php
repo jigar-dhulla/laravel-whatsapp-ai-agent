@@ -8,7 +8,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Enums\Lab;
 use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Services\Wacli;
@@ -50,35 +49,12 @@ class ProcessWhatsAppMessage implements ShouldQueue
         $reply = $response->text;
 
         if ($reply === '') {
-            Log::info('[whatsapp-agent] agent returned empty reply — skipping send', [
-                'chat_jid' => $this->chatJid,
-                'agent' => $this->agentClass,
-                'sender' => $this->senderName ?? $this->senderJid,
-            ]);
-
             return;
         }
 
-        [$isOk, $output, $errorOutput] = $wacli->send($this->chatJid, $reply);
-
-        Log::info(sprintf(
-            '[whatsapp-agent] %s → [%s] %s (agent: %s)',
-            $isOk ? 'replied' : 'send FAILED',
-            $this->chatName ?? $this->chatJid,
-            $this->senderName ?? $this->senderJid ?? '—',
-            class_basename($this->agentClass),
-        ), [
-            'chat_jid' => $this->chatJid,
-            'agent' => $this->agentClass,
-            'ok' => $isOk,
-            'output' => $output,
-            'error_output' => $errorOutput,
-        ]);
+        [$isOk, , $errorOutput] = $wacli->send($this->chatJid, $reply);
 
         if (! $isOk && $errorOutput !== '') {
-            Log::warning('[whatsapp-agent] wacli send error: '.$errorOutput, [
-                'chat_jid' => $this->chatJid,
-            ]);
             $this->fail();
         }
     }
