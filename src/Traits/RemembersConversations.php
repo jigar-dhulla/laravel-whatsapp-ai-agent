@@ -56,6 +56,7 @@ trait RemembersConversations
         }
 
         return WhatsAppMessage::query()
+            ->where('chat_jid', $this->chatJid)
             ->limit($this->maxConversationMessages())
             ->orderBy('ts', 'desc')
             ->get()
