@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.0.1]
 
 ### Added
 - `wa:listen` artisan command — infinite polling loop that syncs new wacli messages, routes them through configured agents, and dispatches one queued job per match.
@@ -21,5 +21,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Environment variables: `WA_WACLI_BINARY`, `WA_WACLI_DATABASE`, `WA_WACLI_STORE`, `WA_POLLING_INTERVAL`, `WA_HISTORY_LIMIT`.
 - GitHub Actions CI workflows for tests (PHP 8.3 + 8.4) and code style (Pint).
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md` for open-source community readiness.
-
-[Unreleased]: https://github.com/jigar-dhulla/laravel-whatsapp-ai-agent/compare/HEAD...HEAD
