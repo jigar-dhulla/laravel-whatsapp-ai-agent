@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Jobs;
+namespace JigarDhulla\LaravelWhatsApp\Jobs;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 use Laravel\Ai\Enums\Lab;
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {

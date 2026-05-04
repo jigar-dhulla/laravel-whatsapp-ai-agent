@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Models;
+namespace JigarDhulla\LaravelWhatsApp\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 
 /**
  * @property int $rowid

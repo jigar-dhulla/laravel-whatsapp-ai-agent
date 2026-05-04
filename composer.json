@@ -22,18 +22,18 @@
     },
     "autoload": {
         "psr-4": {
-            "LaravelWhatsApp\\": "src/"
+            "JigarDhulla\\LaravelWhatsApp\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "LaravelWhatsApp\\Tests\\": "tests/"
+            "JigarDhulla\\LaravelWhatsApp\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "LaravelWhatsApp\\WhatsAppAgentServiceProvider"
+                "JigarDhulla\\LaravelWhatsApp\\WhatsAppAgentServiceProvider"
             ]
         }
     },

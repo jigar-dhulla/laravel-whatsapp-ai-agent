@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Exceptions;
+namespace JigarDhulla\LaravelWhatsApp\Exceptions;
 
 use RuntimeException;
 
-class WacliException extends RuntimeException
-{
-
-}
+class WacliException extends RuntimeException {}

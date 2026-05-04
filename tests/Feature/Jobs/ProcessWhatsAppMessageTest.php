@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Feature\Jobs;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Feature\Jobs;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Schema;
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
-use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
-use LaravelWhatsApp\Tests\TestCase;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
+use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 use Mockery\MockInterface;
 
 class ProcessWhatsAppMessageTest extends TestCase

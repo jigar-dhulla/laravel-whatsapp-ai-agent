@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Unit;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Unit;
 
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Services\AgentRouter;
-use LaravelWhatsApp\Tests\TestCase;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 
 class AgentRouterTest extends TestCase
 {

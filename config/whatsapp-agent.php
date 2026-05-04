@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-use LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 
 return [
 

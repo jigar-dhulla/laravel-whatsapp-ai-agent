@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Traits;
+namespace JigarDhulla\LaravelWhatsApp\Traits;
 
+use JigarDhulla\LaravelWhatsApp\Models\WhatsAppMessage;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Messages\MessageRole;
-use LaravelWhatsApp\Models\WhatsAppMessage;
 
 trait RemembersWhatsAppConversations
 {

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Feature;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Messages\MessageRole;
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
-use LaravelWhatsApp\Tests\TestCase;
 
 class RemembersWhatsAppConversationsTest extends TestCase
 {

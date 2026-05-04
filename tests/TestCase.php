@@ -1,9 +1,9 @@
 <?php
 
-namespace LaravelWhatsApp\Tests;
+namespace JigarDhulla\LaravelWhatsApp\Tests;
 
+use JigarDhulla\LaravelWhatsApp\WhatsAppAgentServiceProvider;
 use Laravel\Ai\AiServiceProvider;
-use LaravelWhatsApp\WhatsAppAgentServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase

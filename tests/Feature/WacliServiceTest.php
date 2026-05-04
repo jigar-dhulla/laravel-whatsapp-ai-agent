@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Feature;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Support\Facades\Process;
-use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Tests\TestCase;
+use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 
 class WacliServiceTest extends TestCase
 {

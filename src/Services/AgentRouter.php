@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Services;
+namespace JigarDhulla\LaravelWhatsApp\Services;
 
 use Illuminate\Support\Str;
 

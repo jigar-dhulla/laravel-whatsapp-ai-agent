@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Console\Commands;
+namespace JigarDhulla\LaravelWhatsApp\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 
 #[Signature('wa:status')]
 #[Description('Show WhatsApp agent runtime status: wacli auth/sync state, configured agents, and last processed message.')]

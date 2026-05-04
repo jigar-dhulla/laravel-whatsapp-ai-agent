@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp;
+namespace JigarDhulla\LaravelWhatsApp;
 
 use Illuminate\Support\ServiceProvider;
-use LaravelWhatsApp\Console\Commands\ListenCommand;
-use LaravelWhatsApp\Console\Commands\SetupCommand;
-use LaravelWhatsApp\Console\Commands\StatusCommand;
-use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Console\Commands\ListenCommand;
+use JigarDhulla\LaravelWhatsApp\Console\Commands\SetupCommand;
+use JigarDhulla\LaravelWhatsApp\Console\Commands\StatusCommand;
+use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 
 class WhatsAppAgentServiceProvider extends ServiceProvider
 {

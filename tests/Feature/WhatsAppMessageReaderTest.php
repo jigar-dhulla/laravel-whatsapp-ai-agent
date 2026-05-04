@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Feature;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Services\AgentRouter;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
-use LaravelWhatsApp\Tests\TestCase;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 
 class WhatsAppMessageReaderTest extends TestCase
 {

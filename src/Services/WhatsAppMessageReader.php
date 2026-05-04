@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Services;
+namespace JigarDhulla\LaravelWhatsApp\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use LaravelWhatsApp\Models\WhatsAppMessage;
+use JigarDhulla\LaravelWhatsApp\Models\WhatsAppMessage;
 
 class WhatsAppMessageReader
 {

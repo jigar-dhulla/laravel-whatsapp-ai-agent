@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Services;
+namespace JigarDhulla\LaravelWhatsApp\Services;
 
 use Illuminate\Support\Facades\Process;
-use LaravelWhatsApp\Exceptions\WacliException;
+use JigarDhulla\LaravelWhatsApp\Exceptions\WacliException;
 use RuntimeException;
 
 class Wacli

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Console\Commands;
+namespace JigarDhulla\LaravelWhatsApp\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
-use LaravelWhatsApp\Services\AgentRouter;
-use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
+use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
+use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 use Throwable;
 
 #[Signature('wa:listen {--once : Run a single polling iteration and exit} {--max-iterations= : Stop after this many iterations}')]

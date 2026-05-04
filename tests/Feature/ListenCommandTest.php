@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Feature;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Schema;
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
-use LaravelWhatsApp\Services\WhatsAppMessageReader;
-use LaravelWhatsApp\Tests\TestCase;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
+use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 
 class ListenCommandTest extends TestCase
 {

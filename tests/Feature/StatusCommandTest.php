@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace LaravelWhatsApp\Tests\Feature;
+namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Support\Facades\Process;
-use LaravelWhatsApp\Agents\WhatsAppAgent;
-use LaravelWhatsApp\Tests\TestCase;
+use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 
 class StatusCommandTest extends TestCase
 {

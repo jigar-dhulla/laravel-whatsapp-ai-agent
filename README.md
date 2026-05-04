@@ -68,7 +68,7 @@ return [
     */
     'agents' => [
         [
-            'agent'    => \LaravelWhatsApp\Agents\WhatsAppAgent::class,
+            'agent'    => \JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent::class,
             'provider' => env('WA_AGENT_PROVIDER'),
             'model'    => env('WA_AGENT_MODEL'),
             'triggers' => [],
