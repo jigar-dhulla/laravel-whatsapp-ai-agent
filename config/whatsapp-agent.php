@@ -20,7 +20,6 @@ return [
         'binary' => env('WA_WACLI_BINARY', 'wacli'),
         'database' => env('WA_WACLI_DATABASE'),
         'store' => env('WA_WACLI_STORE'),
-        'system_jid' => env('WA_WACLI_SYSTEM_SENDER_JID'),
     ],
 
     /*

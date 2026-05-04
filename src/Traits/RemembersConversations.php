@@ -12,8 +12,6 @@ trait RemembersConversations
 
     protected ?string $senderJid = null;
 
-    abstract protected function getSystemSenderJid(): string;
-
     /**
      * Start a new conversation for the given user.
      */
@@ -100,7 +98,7 @@ trait RemembersConversations
 
     private function determineMessageRole(WhatsAppMessage $message): MessageRole
     {
-        return $message->sender_name === 'me' || $message->sender_jid === $this->getSystemSenderJid()
+        return $message->from_me
             ? MessageRole::Assistant
             : MessageRole::User;
     }
