@@ -3,6 +3,7 @@
 namespace LaravelWhatsApp\Traits;
 
 use Laravel\Ai\Messages\Message;
+use Laravel\Ai\Messages\MessageRole;
 use LaravelWhatsApp\Models\WhatsAppMessage;
 
 trait RemembersConversations
@@ -10,6 +11,8 @@ trait RemembersConversations
     protected ?string $chatJid = null;
 
     protected ?string $senderJid = null;
+
+    abstract protected function getSystemSenderJid(): string;
 
     /**
      * Start a new conversation for the given user.
@@ -59,7 +62,7 @@ trait RemembersConversations
             ->orderBy('ts', 'desc')
             ->get()
             ->map(function (WhatsAppMessage $message) {
-                return new Message($message->sender_jid, $message->display_text ?? $message->text);
+                return new Message($this->determineMessageRole($message), $message->display_text ?? $message->text);
             });
     }
 
@@ -93,5 +96,12 @@ trait RemembersConversations
     public function conversationParticipant(): ?string
     {
         return $this->senderJid;
+    }
+
+    private function determineMessageRole(WhatsAppMessage $message): MessageRole
+    {
+        return $message->sender_name === 'me' || $message->sender_jid === $this->getSystemSenderJid()
+            ? MessageRole::Assistant
+            : MessageRole::User;
     }
 }

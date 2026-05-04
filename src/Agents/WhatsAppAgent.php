@@ -18,4 +18,9 @@ class WhatsAppAgent implements Agent, Conversational
     {
         return 'You are a helpful AI agent reachable on WhatsApp. Reply concisely.';
     }
+
+    protected function getSystemSenderJid(): string
+    {
+        return config('whatsapp-agent.system_jid');
+    }
 }
