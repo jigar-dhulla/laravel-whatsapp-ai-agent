@@ -13,7 +13,7 @@ use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Services\WhatsAppMessageReader;
 use LaravelWhatsApp\Tests\TestCase;
 
-class RemembersConversationsTest extends TestCase
+class RemembersWhatsAppConversationsTest extends TestCase
 {
     protected function setUp(): void
     {

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Enums\Lab;
 use LaravelWhatsApp\Agents\WhatsAppAgent;
 use LaravelWhatsApp\Services\Wacli;
-use LaravelWhatsApp\Traits\RemembersConversations;
+use LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {
@@ -33,7 +33,7 @@ class ProcessWhatsAppMessage implements ShouldQueue
     {
         $wacli->waitUntilUnlocked();
 
-        /** @var WhatsAppAgent|RemembersConversations $agent */
+        /** @var WhatsAppAgent|RemembersWhatsAppConversations $agent */
         $agent = app($this->agentClass);
 
         $provider = $this->providerOverride !== null

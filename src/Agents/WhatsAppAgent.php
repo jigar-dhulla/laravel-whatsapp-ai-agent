@@ -7,12 +7,12 @@ namespace LaravelWhatsApp\Agents;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Promptable;
-use LaravelWhatsApp\Traits\RemembersConversations;
+use LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 use Stringable;
 
 class WhatsAppAgent implements Agent, Conversational
 {
-    use Promptable, RemembersConversations;
+    use Promptable, RemembersWhatsAppConversations;
 
     public function instructions(): Stringable|string
     {

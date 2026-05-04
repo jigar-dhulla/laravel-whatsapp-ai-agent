@@ -8,7 +8,7 @@ use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Messages\MessageRole;
 use LaravelWhatsApp\Models\WhatsAppMessage;
 
-trait RemembersConversations
+trait RemembersWhatsAppConversations
 {
     protected ?string $chatJid = null;
 
