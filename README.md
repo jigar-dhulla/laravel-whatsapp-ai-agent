@@ -7,6 +7,10 @@
 
 An extension to the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) that adds WhatsApp as an agent interface. It polls a [wacli](https://github.com/steipete/wacli) SQLite database for new messages, routes them through your configured agents (any class that implements `Laravel\Ai\Contracts\Agent`), and sends replies back via the wacli binary.
 
+## Intro & Demo
+
+Watch the intro and demo on YouTube: [https://www.youtube.com/watch?v=XNAz-Ry2-co](https://www.youtube.com/watch?v=XNAz-Ry2-co)
+
 ## Requirements
 
 - PHP 8.3+
