@@ -167,33 +167,6 @@ class WacliServiceTest extends TestCase
         $this->assertNull((new Wacli)->locateBinary());
     }
 
-    public function test_sync_returns_data_on_success(): void
-    {
-        Process::fake([
-            '*' => Process::result(output: json_encode([
-                'success' => true,
-                'data' => ['messages_stored' => 42, 'synced' => true],
-            ])),
-        ]);
-
-        $result = (new Wacli('wacli'))->syncOnceExitIfIdleForFiveSeconds();
-
-        $this->assertSame(42, $result['messages_stored']);
-        $this->assertTrue($result['synced']);
-    }
-
-    public function test_sync_returns_zeros_on_failure(): void
-    {
-        Process::fake([
-            '*' => Process::result(exitCode: 1),
-        ]);
-
-        $result = (new Wacli('wacli'))->syncOnceExitIfIdleForFiveSeconds();
-
-        $this->assertSame(0, $result['messages_stored']);
-        $this->assertFalse($result['synced']);
-    }
-
     public function test_version_returns_only_version_number(): void
     {
         Process::fake([

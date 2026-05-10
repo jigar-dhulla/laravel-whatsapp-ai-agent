@@ -6,7 +6,6 @@ namespace JigarDhulla\LaravelWhatsApp\Services;
 
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
-use JigarDhulla\LaravelWhatsApp\Exceptions\WacliException;
 use RuntimeException;
 
 class Wacli
@@ -152,23 +151,6 @@ class Wacli
     }
 
     /**
-     * Poll wacli until the sync lock is released, or max attempts exceeded.
-     * If the lock is still held after max attempts, log a warning and proceed.
-     */
-    public function waitUntilUnlocked(int $maxAttempts = 30, int $sleepSeconds = 1): void
-    {
-        for ($i = 0; $i < $maxAttempts; $i++) {
-            if (! $this->isLockHeld()) {
-                return;
-            }
-
-            sleep($sleepSeconds);
-        }
-
-        throw new WacliException('Could not get the lock');
-    }
-
-    /**
      * List all known chats (DMs and groups) from the local DB.
      *
      * @return array<int, array<string, mixed>>
@@ -209,36 +191,6 @@ class Wacli
         ]);
 
         return [$result->successful(), $result->output(), $result->errorOutput()];
-    }
-
-    /**
-     * Run an initial sync with a hard timeout so \`wa:install\` never hangs
-     * when messages keep arriving and the idle timer never fires.
-     *
-     * Returns whatever wacli managed to store before the timeout/exit.
-     *
-     * @return array{messages_stored: int, synced: bool}
-     */
-    public function syncOnceExitIfIdleForFiveSeconds(): array
-    {
-        $result = $this->runBinary(['sync', '--once', '--idle-exit', '5s', '--json'], timeout: 30);
-
-        if (! $result->successful()) {
-            return ['messages_stored' => 0, 'synced' => false];
-        }
-
-        $decoded = json_decode($result->output(), true);
-
-        if (! is_array($decoded) || ($decoded['success'] ?? false) !== true) {
-            return ['messages_stored' => 0, 'synced' => false];
-        }
-
-        $data = $decoded['data'] ?? [];
-
-        return [
-            'messages_stored' => (int) ($data['messages_stored'] ?? 0),
-            'synced' => true,
-        ];
     }
 
     protected function runBinary(array $arguments, ?int $timeout = null): ProcessResult
