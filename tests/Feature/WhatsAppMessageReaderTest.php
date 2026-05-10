@@ -6,8 +6,6 @@ namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
-use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 

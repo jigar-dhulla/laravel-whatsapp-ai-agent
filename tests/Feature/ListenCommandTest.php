@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
@@ -146,7 +147,7 @@ class ListenCommandTest extends TestCase
             ->assertExitCode(0);
 
         Bus::assertDispatchedTimes(ProcessWhatsAppMessage::class, 1);
-        $this->assertSame(4, (int) \Illuminate\Support\Facades\Cache::get(WhatsAppMessageReader::CACHE_KEY_LAST_ROWID));
+        $this->assertSame(4, (int) Cache::get(WhatsAppMessageReader::CACHE_KEY_LAST_ROWID));
     }
 
     private function seedSchema(): void
