@@ -47,9 +47,9 @@ return [
     'agents' => [
         [
             'agent' => WhatsAppAgent::class,
-            'triggers' => [],
-            'chats' => [],
-            'groups' => [],
+            'triggers' => [], // wa:status will give you account JID which you can set trigger as. e.g., @123456789 - this enables tagging/mentions in groups
+            'chats' => [], // run `php artisan wa:chats` for chat jids
+            'groups' => [], // run `php artisan wa:groups` for group jids
         ],
     ],
 

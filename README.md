@@ -16,7 +16,7 @@ Watch the intro and demo on YouTube: [https://www.youtube.com/watch?v=XNAz-Ry2-c
 - PHP 8.3+
 - Laravel 13.0+
 - `laravel/ai` ^0.6
-- [`wacli`](https://github.com/steipete/wacli) **0.6.0+** installed and authenticated on the host
+- [`wacli`](https://github.com/steipete/wacli) **0.8.1+** installed and authenticated on the host
 
 ## Installation
 
@@ -181,7 +181,6 @@ One message can match multiple agents simultaneously. Each match dispatches an i
 ```bash
 wacli sync --follow --refresh-contacts --refresh-groups
 ```
-
 You may use a 3rd party tool to make sure this keeps running.
 
 ### Start the listener
