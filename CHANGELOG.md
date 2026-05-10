@@ -16,9 +16,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `Wacli` service methods: `syncOnceExitIfIdleForFiveSeconds` and `waitUntilUnlocked`.
 - `ProcessWhatsAppMessage` job no longer waits for wacli lock before sending.
 
-### Fixed
-- Update last processed id irrespective of the match so the listener advances.
-
 ## [0.0.1]
 
 ### Added
