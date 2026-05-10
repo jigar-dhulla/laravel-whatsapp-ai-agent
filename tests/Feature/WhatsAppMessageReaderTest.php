@@ -22,39 +22,53 @@ class WhatsAppMessageReaderTest extends TestCase
 
     public function test_fetch_new_returns_messages_above_the_last_processed_rowid(): void
     {
+        config()->set('whatsapp-agent.agents', [[
+            'agent' => WhatsAppAgent::class,
+            'chats' => ['111@s.whatsapp.net'],
+            'groups' => [],
+        ]]);
+
         $this->seedMessage(['rowid' => 1, 'chat_jid' => '111@s.whatsapp.net', 'text' => 'old', 'from_me' => 0]);
         $this->seedMessage(['rowid' => 2, 'chat_jid' => '111@s.whatsapp.net', 'text' => 'new', 'from_me' => 0]);
 
         Cache::put(WhatsAppMessageReader::CACHE_KEY_LAST_ROWID, 1);
 
-        $messages = (new WhatsAppMessageReader)->fetchNew();
+        $router = AgentRouter::fromConfig();
+        $messages = (new WhatsAppMessageReader)->fetchNew($router);
 
         $this->assertCount(1, $messages);
         $this->assertSame('new', $messages->first()->text);
     }
 
-    public function test_fetch_new_does_not_filter_anything(): void
+    public function test_fetch_new_filters_out_outbound_and_unscoped_messages(): void
     {
+        config()->set('whatsapp-agent.agents', [[
+            'agent' => WhatsAppAgent::class,
+            'chats' => ['111@s.whatsapp.net'],
+            'groups' => [],
+        ]]);
+
         $this->seedMessage(['rowid' => 1, 'chat_jid' => '111@s.whatsapp.net', 'text' => 'inbound', 'from_me' => 0]);
         $this->seedMessage(['rowid' => 2, 'chat_jid' => '111@s.whatsapp.net', 'text' => 'mine', 'from_me' => 1]);
         $this->seedMessage(['rowid' => 3, 'chat_jid' => '999@s.whatsapp.net', 'text' => 'other dm', 'from_me' => 0]);
 
         Cache::put(WhatsAppMessageReader::CACHE_KEY_LAST_ROWID, 0);
 
-        $messages = (new WhatsAppMessageReader)->fetchNew();
+        $router = AgentRouter::fromConfig();
+        $messages = (new WhatsAppMessageReader)->fetchNew($router);
 
-        $this->assertCount(3, $messages);
+        $this->assertCount(1, $messages);
+        $this->assertSame('inbound', $messages->first()->text);
     }
 
-    public function test_fetch_new_respects_limit(): void
+    public function test_fetch_new_returns_empty_when_no_chats_or_groups_configured(): void
     {
-        $this->seedMessage(['rowid' => 1]);
-        $this->seedMessage(['rowid' => 2]);
-        $this->seedMessage(['rowid' => 3]);
+        config()->set('whatsapp-agent.agents', []);
 
-        $messages = (new WhatsAppMessageReader)->fetchNew(limit: 2);
+        $this->seedMessage(['rowid' => 1, 'chat_jid' => '111@s.whatsapp.net', 'text' => 'hi', 'from_me' => 0]);
 
-        $this->assertCount(2, $messages);
+        $router = AgentRouter::fromConfig();
+        $this->assertCount(0, (new WhatsAppMessageReader)->fetchNew($router));
     }
 
     public function test_bookmark_current_head_sets_last_rowid_to_max(): void
@@ -79,12 +93,10 @@ class WhatsAppMessageReaderTest extends TestCase
     {
         DB::connection(WhatsAppMessageReader::CONNECTION_NAME)->table('messages')->insert(array_merge([
             'msg_id' => 'M-'.($attrs['rowid'] ?? 0),
-            'chat_jid' => '111@s.whatsapp.net',
-            'sender_jid' => '111@s.whatsapp.net',
+            'sender_jid' => $attrs['chat_jid'] ?? '111@s.whatsapp.net',
             'sender_name' => 'Sender',
             'chat_name' => 'Chat',
             'ts' => 1700000000,
-            'from_me' => 0,
             'display_text' => null,
             'media_type' => null,
         ], $attrs));

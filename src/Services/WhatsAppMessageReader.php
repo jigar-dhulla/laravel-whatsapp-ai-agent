@@ -15,16 +15,23 @@ class WhatsAppMessageReader
     public const string CONNECTION_NAME = 'whatsapp_agent';
 
     /**
-     * Fetch new messages newer than the last processed rowid.
-     * Returns rows ordered by rowid asc.
+     * Fetch new inbound messages newer than the last processed rowid, scoped
+     * to the configured chats and groups. Returns rows ordered by rowid asc.
      *
      * @return Collection<int, WhatsAppMessage>
      */
-    public function fetchNew(int $limit = 50): Collection
+    public function fetchNew(AgentRouter $router, int $limit = 50): Collection
     {
         $lastRowid = (int) Cache::get(self::CACHE_KEY_LAST_ROWID, 0);
 
-        return WhatsAppMessage::query()
+        $jids = $router->allowedJids();
+
+        if ($jids === []) {
+            return collect();
+        }
+
+        return WhatsAppMessage::query()->whereIn('chat_jid', $jids)
+            ->where('from_me', false)
             ->where('rowid', '>', $lastRowid)
             ->orderBy('rowid')
             ->limit($limit)

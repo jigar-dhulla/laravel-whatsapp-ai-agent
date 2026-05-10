@@ -103,7 +103,7 @@ class ListenCommand extends Command
 
     private function processBatch(WhatsAppMessageReader $reader, AgentRouter $router): void
     {
-        $messages = $reader->fetchNew();
+        $messages = $reader->fetchNew($router);
 
         $count = $messages->count();
 
@@ -113,14 +113,6 @@ class ListenCommand extends Command
         }
 
         foreach ($messages as $message) {
-            // Always advance the bookmark
-            $reader->markProcessed($message->rowid);
-
-            // Ignore outbound messages
-            if ($message->from_me) {
-                continue;
-            }
-
             $body = $message->display_text ?: $message->text;
             $matched = $router->match((string) $message->chat_jid, $body);
 
@@ -154,6 +146,8 @@ class ListenCommand extends Command
                     ));
                 }
             }
+
+            $reader->markProcessed($message->rowid);
         }
     }
 
