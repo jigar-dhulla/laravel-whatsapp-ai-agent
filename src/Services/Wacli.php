@@ -11,6 +11,9 @@ use RuntimeException;
 
 class Wacli
 {
+    /** @var array<string, mixed>|null */
+    protected ?array $doctorData = null;
+
     public function __construct(protected ?string $binary = null) {}
 
     public function binary(): string
@@ -36,15 +39,28 @@ class Wacli
     }
 
     /**
-     * Run `wacli doctor --json` and return the decoded `data` payload, or null on failure.
+     * Run \`wacli doctor --json\` and return the decoded \`data\` payload, or null on failure.
      *
      * @return array<string, mixed>|null
      */
-    public function doctor(): ?array
+    public function doctor(bool $refresh = false): ?array
     {
-        $data = $this->runJson(['doctor']);
+        if ($refresh || $this->doctorData === null) {
+            $data = $this->runJson(['doctor']);
+            $this->doctorData = is_array($data) ? $data : null;
+        }
 
-        return is_array($data) ? $data : null;
+        return $this->doctorData;
+    }
+
+    /**
+     * Get Version
+     * @return string
+     */
+    public function version(): string
+    {
+        $processedResult =  $this->runBinary(['--version']);
+        return trim($processedResult->output());
     }
 
     /**
@@ -52,9 +68,81 @@ class Wacli
      */
     public function isLockHeld(): bool
     {
-        $data = $this->doctor();
+        $data = $this->doctor(refresh: true);
 
         return (bool) ($data['lock_held'] ?? false);
+    }
+
+    /**
+     * Check if wacli is authenticated.
+     */
+    public function isAuthenticated(): bool
+    {
+        $data = $this->doctor();
+
+        return (bool) ($data['authenticated'] ?? false);
+    }
+
+    /**
+     * Check if wacli is connected.
+     */
+    public function isConnected(): bool
+    {
+        $data = $this->doctor();
+
+        return (bool) ($data['connected'] ?? false);
+    }
+
+    /**
+     * Get the connection state.
+     */
+    public function getConnectionState(): string
+    {
+        $data = $this->doctor();
+
+        return (string) ($data['connection_state'] ?? 'unknown');
+    }
+
+    /**
+     * Get the linked JID.
+     */
+    public function getLinkedJid(): ?string
+    {
+        $data = $this->doctor();
+
+        return $data['linked_jid'] ?? null;
+    }
+
+    /**
+     * Get the store directory.
+     */
+    public function getStoreDir(): ?string
+    {
+        $data = $this->doctor();
+
+        return $data['store_dir'] ?? null;
+    }
+
+    /**
+     * Check if FTS is enabled.
+     */
+    public function isFtsEnabled(): bool
+    {
+        $data = $this->doctor();
+
+        return (bool) ($data['fts_enabled'] ?? false);
+    }
+
+    /**
+     * Get store statistics.
+     *
+     * @return array<string, mixed>
+     */
+    public function getStoreStats(): array
+    {
+        $data = $this->doctor();
+
+        return is_array($data['store'] ?? null) ? $data['store'] : [];
     }
 
     /**
@@ -118,7 +206,7 @@ class Wacli
     }
 
     /**
-     * Run an initial sync with a hard timeout so `wa:install` never hangs
+     * Run an initial sync with a hard timeout so \`wa:install\` never hangs
      * when messages keep arriving and the idle timer never fires.
      *
      * Returns whatever wacli managed to store before the timeout/exit.
@@ -167,7 +255,7 @@ class Wacli
     }
 
     /**
-     * Run a wacli subcommand with `--json` and return the decoded `data` field.
+     * Run a wacli subcommand with \`--json\` and return the decoded \`data\` field.
      */
     protected function runJson(array $arguments): mixed
     {
