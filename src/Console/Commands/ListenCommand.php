@@ -79,15 +79,6 @@ class ListenCommand extends Command
             }
 
             try {
-                $syncResult = $wacli->syncOnceExitIfIdleForFiveSeconds();
-
-                if ($this->output->isDebug() && $syncResult['synced']) {
-                    $this->line(sprintf(
-                        '  <fg=gray>[sync] %d message(s) stored</>',
-                        $syncResult['messages_stored']
-                    ));
-                }
-
                 $this->processBatch($reader, $router);
             } catch (Throwable $e) {
                 $this->components->warn('Polling iteration failed: '.$e->getMessage());

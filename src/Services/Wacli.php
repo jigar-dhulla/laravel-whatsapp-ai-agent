@@ -6,11 +6,13 @@ namespace JigarDhulla\LaravelWhatsApp\Services;
 
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
-use JigarDhulla\LaravelWhatsApp\Exceptions\WacliException;
 use RuntimeException;
 
 class Wacli
 {
+    /** @var array<string, mixed>|null */
+    protected ?array $doctorData = null;
+
     public function __construct(protected ?string $binary = null) {}
 
     public function binary(): string
@@ -36,15 +38,34 @@ class Wacli
     }
 
     /**
-     * Run `wacli doctor --json` and return the decoded `data` payload, or null on failure.
+     * Run \`wacli doctor --json\` and return the decoded \`data\` payload, or null on failure.
      *
      * @return array<string, mixed>|null
      */
-    public function doctor(): ?array
+    public function doctor(bool $refresh = false): ?array
     {
-        $data = $this->runJson(['doctor']);
+        if ($refresh || $this->doctorData === null) {
+            $data = $this->runJson(['doctor']);
+            $this->doctorData = is_array($data) ? $data : null;
+        }
 
-        return is_array($data) ? $data : null;
+        return $this->doctorData;
+    }
+
+    /**
+     * Get Version
+     */
+    public function version(): string
+    {
+        $processedResult = $this->runBinary(['--version']);
+
+        $output = trim($processedResult->output());
+
+        if (preg_match('/(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)/', $output, $matches)) {
+            return $matches[1];
+        }
+
+        return $output;
     }
 
     /**
@@ -52,26 +73,81 @@ class Wacli
      */
     public function isLockHeld(): bool
     {
-        $data = $this->doctor();
+        $data = $this->doctor(refresh: true);
 
         return (bool) ($data['lock_held'] ?? false);
     }
 
     /**
-     * Poll wacli until the sync lock is released, or max attempts exceeded.
-     * If the lock is still held after max attempts, log a warning and proceed.
+     * Check if wacli is authenticated.
      */
-    public function waitUntilUnlocked(int $maxAttempts = 30, int $sleepSeconds = 1): void
+    public function isAuthenticated(): bool
     {
-        for ($i = 0; $i < $maxAttempts; $i++) {
-            if (! $this->isLockHeld()) {
-                return;
-            }
+        $data = $this->doctor();
 
-            sleep($sleepSeconds);
-        }
+        return (bool) ($data['authenticated'] ?? false);
+    }
 
-        throw new WacliException('Could not get the lock');
+    /**
+     * Check if wacli is connected.
+     */
+    public function isConnected(): bool
+    {
+        $data = $this->doctor();
+
+        return (bool) ($data['connected'] ?? false);
+    }
+
+    /**
+     * Get the connection state.
+     */
+    public function getConnectionState(): string
+    {
+        $data = $this->doctor();
+
+        return (string) ($data['connection_state'] ?? 'unknown');
+    }
+
+    /**
+     * Get the linked JID.
+     */
+    public function getLinkedJid(): ?string
+    {
+        $data = $this->doctor();
+
+        return $data['linked_jid'] ?? null;
+    }
+
+    /**
+     * Get the store directory.
+     */
+    public function getStoreDir(): ?string
+    {
+        $data = $this->doctor();
+
+        return $data['store_dir'] ?? null;
+    }
+
+    /**
+     * Check if FTS is enabled.
+     */
+    public function isFtsEnabled(): bool
+    {
+        $data = $this->doctor();
+
+        return (bool) ($data['fts_enabled'] ?? false);
+    }
+
+    /**
+     * Get store statistics.
+     *
+     * @return array<string, mixed>
+     */
+    public function getStoreStats(): array
+    {
+        $data = $this->doctor();
+
+        return is_array($data['store'] ?? null) ? $data['store'] : [];
     }
 
     /**
@@ -117,36 +193,6 @@ class Wacli
         return [$result->successful(), $result->output(), $result->errorOutput()];
     }
 
-    /**
-     * Run an initial sync with a hard timeout so `wa:install` never hangs
-     * when messages keep arriving and the idle timer never fires.
-     *
-     * Returns whatever wacli managed to store before the timeout/exit.
-     *
-     * @return array{messages_stored: int, synced: bool}
-     */
-    public function syncOnceExitIfIdleForFiveSeconds(): array
-    {
-        $result = $this->runBinary(['sync', '--once', '--idle-exit', '5s', '--json'], timeout: 30);
-
-        if (! $result->successful()) {
-            return ['messages_stored' => 0, 'synced' => false];
-        }
-
-        $decoded = json_decode($result->output(), true);
-
-        if (! is_array($decoded) || ($decoded['success'] ?? false) !== true) {
-            return ['messages_stored' => 0, 'synced' => false];
-        }
-
-        $data = $decoded['data'] ?? [];
-
-        return [
-            'messages_stored' => (int) ($data['messages_stored'] ?? 0),
-            'synced' => true,
-        ];
-    }
-
     protected function runBinary(array $arguments, ?int $timeout = null): ProcessResult
     {
         $store = config('whatsapp-agent.wacli.store');
@@ -167,7 +213,7 @@ class Wacli
     }
 
     /**
-     * Run a wacli subcommand with `--json` and return the decoded `data` field.
+     * Run a wacli subcommand with \`--json\` and return the decoded \`data\` field.
      */
     protected function runJson(array $arguments): mixed
     {

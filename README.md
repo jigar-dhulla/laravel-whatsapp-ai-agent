@@ -16,7 +16,7 @@ Watch the intro and demo on YouTube: [https://www.youtube.com/watch?v=XNAz-Ry2-c
 - PHP 8.3+
 - Laravel 13.0+
 - `laravel/ai` ^0.6
-- [`wacli`](https://github.com/steipete/wacli) **0.6.0+** installed and authenticated on the host
+- [`wacli`](https://github.com/steipete/wacli) **0.8.1+** installed and authenticated on the host
 
 ## Installation
 
@@ -176,6 +176,13 @@ One message can match multiple agents simultaneously. Each match dispatches an i
 
 ## Usage
 
+### Start the wacli sync daemon
+
+```bash
+wacli sync --follow --refresh-contacts --refresh-groups
+```
+You may use a 3rd party tool to make sure this keeps running.
+
 ### Start the listener
 
 ```bash
@@ -219,15 +226,11 @@ wacli sync  →  SQLite DB  →  WhatsAppMessageReader  →  AgentRouter
                                                         wacli send text
 ```
 
-1. `wa:listen` calls `wacli sync --once --idle-exit 5s` each iteration.
+1. `wa:listen` runs as daemon.
 2. `WhatsAppMessageReader` fetches rows newer than the last processed rowid, filtered to the union of all agents' JIDs.
 3. `AgentRouter::match($chatJid, $body)` returns every agent config entry whose scope contains the chat and whose triggers match the message.
 4. One `ProcessWhatsAppMessage` job is dispatched per matched entry.
 5. The job resolves the agent class from the container, calls `$agent->prompt($body)`, and sends the reply via `wacli send text`.
-
-## Known Limitations
-
-**Sync lock blocks replies** — `wacli sync` holds an exclusive lock, so `wacli send` cannot run concurrently. This package works around it by calling `waitUntilUnlocked()` before each send, but under heavy message load the reply may be delayed until the sync finishes. Native support for concurrent sync and send is being tracked in [steipete/wacli#6](https://github.com/steipete/wacli/issues/6).
 
 ## Testing
 
