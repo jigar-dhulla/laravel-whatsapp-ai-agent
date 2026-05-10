@@ -64,7 +64,7 @@ return [
     */
 
     'polling' => [
-        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 60),
+        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 1),
     ],
 
     /*
