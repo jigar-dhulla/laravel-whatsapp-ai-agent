@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace JigarDhulla\LaravelWhatsApp;
 
 use Illuminate\Support\ServiceProvider;
+use JigarDhulla\LaravelWhatsApp\Console\Commands\ChatsCommand;
+use JigarDhulla\LaravelWhatsApp\Console\Commands\GroupsCommand;
 use JigarDhulla\LaravelWhatsApp\Console\Commands\ListenCommand;
 use JigarDhulla\LaravelWhatsApp\Console\Commands\SetupCommand;
 use JigarDhulla\LaravelWhatsApp\Console\Commands\StatusCommand;
@@ -28,6 +30,8 @@ class WhatsAppAgentServiceProvider extends ServiceProvider
         ], 'whatsapp-agent-config');
 
         $this->commands([
+            ChatsCommand::class,
+            GroupsCommand::class,
             ListenCommand::class,
             SetupCommand::class,
             StatusCommand::class,
