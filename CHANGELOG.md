@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 - wa:status shows more information
 - Listen command is independent of the wacli's sync command
+- Chat & Group list command to help populate the scope with JIDs in config/whatsapp-agent.php
 
 ### Changed
 - This package now supports wacli 0.8.1+
