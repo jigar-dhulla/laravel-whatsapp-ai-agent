@@ -14,13 +14,20 @@ class StatusCommandTest extends TestCase
     {
         Process::preventStrayProcesses();
         Process::fake([
-            '*doctor*' => Process::result(output: json_encode([
+            '*' => Process::result(output: json_encode([
                 'success' => true,
                 'data' => [
                     'store_dir' => '/tmp/.wacli',
                     'authenticated' => true,
-                    'connected' => false,
+                    'connected' => true,
                     'lock_held' => false,
+                    'connection_state' => 'connected',
+                    'linked_jid' => '911234567890@s.whatsapp.net',
+                    'fts_enabled' => true,
+                    'store' => [
+                        'messages' => 100,
+                        'chats' => 50,
+                    ],
                 ],
                 'error' => null,
             ])),
@@ -38,6 +45,9 @@ class StatusCommandTest extends TestCase
         $this->artisan('wa:status')
             ->assertExitCode(0)
             ->expectsOutputToContain('/tmp/.wacli')
+            ->expectsOutputToContain('911234567890@s.whatsapp.net')
+            ->expectsOutputToContain('connected')
+            ->expectsOutputToContain('Messages: 100, Chats: 50')
             ->expectsOutputToContain('WhatsAppAgent')
             ->expectsOutputToContain('@agent');
     }
@@ -45,8 +55,9 @@ class StatusCommandTest extends TestCase
     public function test_it_warns_when_doctor_fails(): void
     {
         Process::preventStrayProcesses();
+        // Return success: false to trigger error in doctor()
         Process::fake([
-            '*doctor*' => Process::result(exitCode: 1),
+            '*' => Process::result(output: json_encode(['success' => false])),
         ]);
 
         $this->artisan('wa:status')
@@ -57,7 +68,7 @@ class StatusCommandTest extends TestCase
     public function test_it_shows_inactive_when_agent_has_no_scope(): void
     {
         Process::preventStrayProcesses();
-        Process::fake(['*doctor*' => Process::result(exitCode: 1)]);
+        Process::fake(['*' => Process::result(output: json_encode(['success' => false]))]);
 
         config()->set('whatsapp-agent.agents', [[
             'agent' => WhatsAppAgent::class,

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+- wa:status shows more information
+
+### Changed
+- This package now supports wacli 0.8.1+ 
+
 ## [0.0.1]
 
 ### Added
