@@ -25,6 +25,10 @@ class SetupCommand extends Command
 
         [$binary, $store, $database] = $this->resolveWacliPaths($wacli);
 
+        if ($binary === '') {
+            return self::FAILURE;
+        }
+
         $this->writeEnvVar('WA_WACLI_BINARY', $binary);
         $this->writeEnvVar('WA_WACLI_STORE', $store);
         $this->writeEnvVar('WA_WACLI_DATABASE', $database);
@@ -35,9 +39,14 @@ class SetupCommand extends Command
         return self::SUCCESS;
     }
 
+    protected function envPath(): string
+    {
+        return $this->laravel->basePath('.env');
+    }
+
     private function writeEnvVar(string $key, string $value): void
     {
-        $envPath = $this->laravel->basePath('.env');
+        $envPath = $this->envPath();
 
         if (! file_exists($envPath)) {
             file_put_contents($envPath, '');
@@ -77,7 +86,16 @@ class SetupCommand extends Command
             required: true,
         );
 
-        $probe = (new Wacli($binary))->doctor();
+        $wacli = new Wacli($binary);
+        $version = $wacli->version();
+
+        if (version_compare($version, '0.8.1', '<')) {
+            warning("The wacli binary must be at least version 0.8.1. Found version {$version}.");
+
+            return ['', '', ''];
+        }
+
+        $probe = $wacli->doctor();
 
         $detectedStore = is_array($probe) ? Arr::get($probe, 'store_dir') : null;
 

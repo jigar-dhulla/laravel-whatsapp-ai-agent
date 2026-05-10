@@ -60,7 +60,13 @@ class Wacli
     {
         $processedResult = $this->runBinary(['--version']);
 
-        return trim($processedResult->output());
+        $output = trim($processedResult->output());
+
+        if (preg_match('/(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)/', $output, $matches)) {
+            return $matches[1];
+        }
+
+        return $output;
     }
 
     /**

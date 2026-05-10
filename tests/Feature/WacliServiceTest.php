@@ -193,4 +193,13 @@ class WacliServiceTest extends TestCase
         $this->assertSame(0, $result['messages_stored']);
         $this->assertFalse($result['synced']);
     }
+
+    public function test_version_returns_only_version_number(): void
+    {
+        Process::fake([
+            '*' => Process::result(output: "wacli 0.8.1\n"),
+        ]);
+
+        $this->assertSame('0.8.1', (new Wacli('wacli'))->version());
+    }
 }
