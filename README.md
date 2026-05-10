@@ -176,6 +176,14 @@ One message can match multiple agents simultaneously. Each match dispatches an i
 
 ## Usage
 
+### Start the wacli sync daemon
+
+```bash
+wacli sync --follow --refresh-contacts --refresh-groups
+```
+
+You may use a 3rd party tool to make sure this keeps running.
+
 ### Start the listener
 
 ```bash
@@ -219,7 +227,7 @@ wacli sync  →  SQLite DB  →  WhatsAppMessageReader  →  AgentRouter
                                                         wacli send text
 ```
 
-1. `wa:listen` calls `wacli sync --once --idle-exit 5s` each iteration.
+1. `wa:listen` runs as daemon.
 2. `WhatsAppMessageReader` fetches rows newer than the last processed rowid, filtered to the union of all agents' JIDs.
 3. `AgentRouter::match($chatJid, $body)` returns every agent config entry whose scope contains the chat and whose triggers match the message.
 4. One `ProcessWhatsAppMessage` job is dispatched per matched entry.

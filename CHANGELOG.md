@@ -8,13 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - wa:status shows more information
+- Listen command is independent of the wacli's sync command
 
 ### Changed
-- This package now supports wacli 0.8.1+ 
-
-### Removed
-- `Wacli` service methods: `syncOnceExitIfIdleForFiveSeconds` and `waitUntilUnlocked`.
-- `ProcessWhatsAppMessage` job no longer waits for wacli lock before sending.
+- This package now supports wacli 0.8.1+
 
 ## [0.0.1]
 
