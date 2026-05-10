@@ -225,10 +225,6 @@ wacli sync  →  SQLite DB  →  WhatsAppMessageReader  →  AgentRouter
 4. One `ProcessWhatsAppMessage` job is dispatched per matched entry.
 5. The job resolves the agent class from the container, calls `$agent->prompt($body)`, and sends the reply via `wacli send text`.
 
-## Known Limitations
-
-**Sync lock blocks replies** — `wacli sync` holds an exclusive lock, so `wacli send` cannot run concurrently. This package works around it by calling `waitUntilUnlocked()` before each send, but under heavy message load the reply may be delayed until the sync finishes. Native support for concurrent sync and send is being tracked in [steipete/wacli#6](https://github.com/steipete/wacli/issues/6).
-
 ## Testing
 
 ```bash

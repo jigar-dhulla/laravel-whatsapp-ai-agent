@@ -10,7 +10,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 
-use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\text;

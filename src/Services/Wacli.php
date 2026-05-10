@@ -6,7 +6,6 @@ namespace JigarDhulla\LaravelWhatsApp\Services;
 
 use Illuminate\Contracts\Process\ProcessResult;
 use Illuminate\Support\Facades\Process;
-use JigarDhulla\LaravelWhatsApp\Exceptions\WacliException;
 use RuntimeException;
 
 class Wacli
