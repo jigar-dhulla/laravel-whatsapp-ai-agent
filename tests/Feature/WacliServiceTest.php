@@ -76,7 +76,7 @@ class WacliServiceTest extends TestCase
         $this->assertSame('/Users/test/.wacli', $wacli->getStoreDir());
         $this->assertTrue($wacli->isFtsEnabled());
         $this->assertSame(['messages' => 10], $wacli->getStoreStats());
-        
+
         // Test caching: doctor() should only be called once
         $wacli->isAuthenticated();
         Process::assertRanTimes(fn ($process) => str_contains(implode(' ', $process->command), 'doctor'), 1);

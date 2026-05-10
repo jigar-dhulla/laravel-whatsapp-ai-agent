@@ -55,11 +55,11 @@ class Wacli
 
     /**
      * Get Version
-     * @return string
      */
     public function version(): string
     {
-        $processedResult =  $this->runBinary(['--version']);
+        $processedResult = $this->runBinary(['--version']);
+
         return trim($processedResult->output());
     }
 
