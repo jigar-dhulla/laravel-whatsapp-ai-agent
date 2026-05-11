@@ -8,9 +8,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
+use Laravel\Ai\Contracts\Agent;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {
@@ -27,11 +27,14 @@ class ProcessWhatsAppMessage implements ShouldQueue
 
     public function handle(Wacli $wacli): void
     {
-        /** @var WhatsAppAgent|RemembersWhatsAppConversations $agent */
+        /** @var Agent $agent */
         $agent = app($this->agentClass);
 
-        $response = $agent->forChat($this->chatJid, $this->senderJid)
-            ->prompt($this->body);
+        if (in_array(RemembersWhatsAppConversations::class, class_uses_recursive($agent), true)) {
+            $agent->forChat($this->chatJid, $this->senderJid);
+        }
+
+        $response = $agent->prompt($this->body);
 
         $reply = $response->text;
 
