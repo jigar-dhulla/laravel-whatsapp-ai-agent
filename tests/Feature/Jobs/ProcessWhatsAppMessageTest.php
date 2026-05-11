@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Process;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
+use JigarDhulla\LaravelWhatsApp\Tests\Feature\Jobs\Fixtures\RecordingWhatsAppAgent;
+use JigarDhulla\LaravelWhatsApp\Tests\Feature\Jobs\Fixtures\SimplePromptableAgent;
 use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 use Mockery\MockInterface;
 
@@ -74,5 +76,63 @@ class ProcessWhatsAppMessageTest extends TestCase
         WhatsAppAgent::assertPrompted('hey agent');
 
         $wacli->shouldNotHaveReceived('send');
+    }
+
+    public function test_it_handles_promptable_agents_without_remembers_trait(): void
+    {
+        SimplePromptableAgent::fake(['Hi!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '111@s.whatsapp.net',
+            chatName: 'Alice',
+            senderJid: '111@s.whatsapp.net',
+            senderName: 'Alice',
+            body: 'hey simple agent',
+            agentClass: SimplePromptableAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        SimplePromptableAgent::assertPrompted('hey simple agent');
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command)
+                ? implode(' ', $process->command)
+                : $process->command;
+
+            return str_contains($command, 'send') && str_contains($command, 'Hi!');
+        });
+    }
+
+    public function test_it_calls_for_chat_on_agents_using_remembers_trait(): void
+    {
+        RecordingWhatsAppAgent::reset();
+        RecordingWhatsAppAgent::fake(['Hello there!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '111@s.whatsapp.net',
+            chatName: 'Alice',
+            senderJid: '222@s.whatsapp.net',
+            senderName: 'Bob',
+            body: 'hey agent',
+            agentClass: RecordingWhatsAppAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        $this->assertSame(
+            [['111@s.whatsapp.net', '222@s.whatsapp.net']],
+            RecordingWhatsAppAgent::$forChatCalls,
+        );
     }
 }

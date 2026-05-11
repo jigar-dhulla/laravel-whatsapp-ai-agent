@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-TBA
+### Fixes
+ - Cannot use agent without the trait RemembersWhatsAppConversations
 
 ## [0.1.0]
 
