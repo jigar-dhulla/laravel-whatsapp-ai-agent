@@ -136,6 +136,64 @@ class WacliServiceTest extends TestCase
         $this->assertSame('', trim($stderr));
     }
 
+    public function test_send_emits_reply_to_flag_when_provided(): void
+    {
+        Process::fake([
+            '*' => Process::result(output: '{"success":true}', exitCode: 0),
+        ]);
+
+        (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hi', replyTo: 'MSG-ABC');
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $index = array_search('--reply-to', $command, true);
+
+            return $index !== false
+                && ($command[$index + 1] ?? null) === 'MSG-ABC'
+                && ! in_array('--reply-to-sender', $command, true);
+        });
+    }
+
+    public function test_send_emits_reply_to_sender_flag_when_provided(): void
+    {
+        Process::fake([
+            '*' => Process::result(output: '{"success":true}', exitCode: 0),
+        ]);
+
+        (new Wacli('wacli'))->send(
+            '456@g.us',
+            'Hi group',
+            replyTo: 'MSG-XYZ',
+            replyToSender: '789@s.whatsapp.net',
+        );
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $senderIndex = array_search('--reply-to-sender', $command, true);
+
+            return $senderIndex !== false
+                && ($command[$senderIndex + 1] ?? null) === '789@s.whatsapp.net';
+        });
+    }
+
+    public function test_send_omits_reply_flags_when_not_provided(): void
+    {
+        Process::fake([
+            '*' => Process::result(output: '{"success":true}', exitCode: 0),
+        ]);
+
+        (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hi');
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            return ! in_array('--reply-to', $command, true)
+                && ! in_array('--reply-to-sender', $command, true);
+        });
+    }
+
     public function test_send_returns_failure_tuple_on_nonzero_exit(): void
     {
         Process::fake([

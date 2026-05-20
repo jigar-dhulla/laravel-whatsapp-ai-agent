@@ -177,18 +177,39 @@ class Wacli
     /**
      * Send a text message to a JID via the wacli binary.
      *
+     * Pass $replyTo to quote a stored message by its ID. For replies in groups
+     * where the original message has not been synced locally, also pass
+     * $replyToSender with the original sender's JID.
+     *
      * Returns [success, stdout, stderr].
      *
      * @return array{0: bool, 1: string, 2: string}
      */
-    public function send(string $jid, string $message): array
-    {
-        $result = $this->runBinary([
+    public function send(
+        string $jid,
+        string $message,
+        ?string $replyTo = null,
+        ?string $replyToSender = null,
+    ): array {
+        $arguments = [
             'send', 'text',
             '--to', $jid,
             '--message', $message,
-            '--json',
-        ]);
+        ];
+
+        if ($replyTo !== null && $replyTo !== '') {
+            $arguments[] = '--reply-to';
+            $arguments[] = $replyTo;
+        }
+
+        if ($replyToSender !== null && $replyToSender !== '') {
+            $arguments[] = '--reply-to-sender';
+            $arguments[] = $replyToSender;
+        }
+
+        $arguments[] = '--json';
+
+        $result = $this->runBinary($arguments);
 
         return [$result->successful(), $result->output(), $result->errorOutput()];
     }
