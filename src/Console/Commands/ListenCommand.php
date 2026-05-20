@@ -113,7 +113,7 @@ class ListenCommand extends Command
         }
 
         foreach ($messages as $message) {
-            $body = $message->display_text ?: $message->text;
+            $body = $message->text ?: $message->display_text;
             $matched = $router->match((string) $message->chat_jid, $body);
 
             // -vv: show every scanned message
@@ -135,6 +135,8 @@ class ListenCommand extends Command
                     $message->sender_name !== null ? (string) $message->sender_name : null,
                     (string) $body,
                     (string) $agentConfig['agent'],
+                    $message->getAttachments(),
+                    $message->msg_id,
                 );
 
                 // -vv: show that a job was dispatched

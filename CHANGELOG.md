@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.0]
+
+### Added
+ - message replies with attachments and `reply-to` functionality
+
+### Fixes
+ - Cannot use agent without the trait RemembersWhatsAppConversations
+
+## [0.1.0]
 
 ### Added
 - wa:status shows more information

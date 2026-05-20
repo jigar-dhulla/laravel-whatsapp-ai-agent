@@ -80,7 +80,7 @@ return [
     ],
 
     'polling' => [
-        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 60),
+        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 1),
     ],
 ];
 ```
@@ -90,14 +90,12 @@ return [
 ### Environment Variables
 
 | Variable | Default | Description |
-|---|---|---|
+|---|---------|---|
 | `WA_WACLI_BINARY` | `wacli` | Path to the wacli binary (0.6.0+ required) |
-| `WA_WACLI_DATABASE` | — | Path to the wacli SQLite database (set by `wa:setup`) |
-| `WA_WACLI_STORE` | — | Path to the wacli store directory (set by `wa:setup`) |
-| `WA_AGENT_PROVIDER` | — | Optional: AI provider override for the default agent (e.g. `anthropic`, `openai`) |
-| `WA_AGENT_MODEL` | — | Optional: Model identifier override for the default agent |
-| `WA_POLLING_INTERVAL` | `60` | Seconds between database polls |
-| `WA_HISTORY_LIMIT` | `100` | Max past messages included in agent context |
+| `WA_WACLI_DATABASE` | —       | Path to the wacli SQLite database (set by `wa:setup`) |
+| `WA_WACLI_STORE` | —       | Path to the wacli store directory (set by `wa:setup`) |
+| `WA_POLLING_INTERVAL` | `1`     | Seconds between database polls |
+| `WA_HISTORY_LIMIT` | `100`   | Max past messages included in agent context |
 
 ### Creating Custom Agents
 

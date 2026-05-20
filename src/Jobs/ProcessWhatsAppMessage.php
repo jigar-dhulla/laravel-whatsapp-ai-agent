@@ -8,14 +8,18 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Files\File;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
+    /**
+     * @param  array<int, File>  $attachments
+     */
     public function __construct(
         public readonly string $chatJid,
         public readonly ?string $chatName,
@@ -23,15 +27,20 @@ class ProcessWhatsAppMessage implements ShouldQueue
         public readonly ?string $senderName,
         public readonly string $body,
         public readonly string $agentClass,
+        public readonly array $attachments = [],
+        public readonly ?string $replyToMsgId = null,
     ) {}
 
     public function handle(Wacli $wacli): void
     {
-        /** @var WhatsAppAgent|RemembersWhatsAppConversations $agent */
+        /** @var Agent $agent */
         $agent = app($this->agentClass);
 
-        $response = $agent->forChat($this->chatJid, $this->senderJid)
-            ->prompt($this->body);
+        if (in_array(RemembersWhatsAppConversations::class, class_uses_recursive($agent), true)) {
+            $agent->forChat($this->chatJid, $this->senderJid);
+        }
+
+        $response = $agent->prompt($this->body, attachments: $this->attachments);
 
         $reply = $response->text;
 
@@ -39,7 +48,11 @@ class ProcessWhatsAppMessage implements ShouldQueue
             return;
         }
 
-        [$isOk, , $errorOutput] = $wacli->send($this->chatJid, $reply);
+        [$isOk, , $errorOutput] = $wacli->send(
+            $this->chatJid,
+            $reply,
+            replyTo: $this->replyToMsgId,
+        );
 
         if (! $isOk && $errorOutput !== '') {
             $this->fail();
