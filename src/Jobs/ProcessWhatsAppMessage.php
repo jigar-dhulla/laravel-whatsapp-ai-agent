@@ -16,6 +16,9 @@ class ProcessWhatsAppMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
+    /**
+     * @param array<int, \Laravel\Ai\Files\File> $attachments
+     */
     public function __construct(
         public readonly string $chatJid,
         public readonly ?string $chatName,
@@ -23,6 +26,8 @@ class ProcessWhatsAppMessage implements ShouldQueue
         public readonly ?string $senderName,
         public readonly string $body,
         public readonly string $agentClass,
+        public readonly array $attachments = [],
+        public readonly ?string $replyToMsgId = null,
     ) {}
 
     public function handle(Wacli $wacli): void
@@ -34,7 +39,7 @@ class ProcessWhatsAppMessage implements ShouldQueue
             $agent->forChat($this->chatJid, $this->senderJid);
         }
 
-        $response = $agent->prompt($this->body);
+        $response = $agent->prompt($this->body, attachments: $this->attachments);
 
         $reply = $response->text;
 
@@ -42,7 +47,11 @@ class ProcessWhatsAppMessage implements ShouldQueue
             return;
         }
 
-        [$isOk, , $errorOutput] = $wacli->send($this->chatJid, $reply);
+        [$isOk, , $errorOutput] = $wacli->send(
+            $this->chatJid,
+            $reply,
+            replyTo: $this->replyToMsgId,
+        );
 
         if (! $isOk && $errorOutput !== '') {
             $this->fail();
