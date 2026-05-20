@@ -136,7 +136,7 @@ class ListenCommand extends Command
                     (string) $body,
                     (string) $agentConfig['agent'],
                     $message->getAttachments(),
-                    (string) $message->msg_id,
+                    $message->msg_id,
                 );
 
                 // -vv: show that a job was dispatched

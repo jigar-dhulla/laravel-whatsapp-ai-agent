@@ -11,13 +11,14 @@ use Illuminate\Queue\InteractsWithQueue;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Files\File;
 
 class ProcessWhatsAppMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
     /**
-     * @param array<int, \Laravel\Ai\Files\File> $attachments
+     * @param  array<int, File>  $attachments
      */
     public function __construct(
         public readonly string $chatJid,
