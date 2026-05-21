@@ -72,7 +72,7 @@ trait RemembersWhatsAppConversations
             ->reverse()
             ->values()
             ->map(function (WhatsAppMessage $message) use ($formatter, $chatJid) {
-                $content = $message->display_text ?? $message->text ?? '';
+                $content = (string) ($message->text ?: $message->display_text);
 
                 if (! $message->from_me) {
                     $content = $formatter->prefix($chatJid, $message->sender_name, $message->sender_jid, $content);

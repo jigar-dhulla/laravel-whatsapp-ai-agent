@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
+use JigarDhulla\LaravelWhatsApp\Jobs\ResolveWhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
@@ -114,6 +115,21 @@ class ListenCommand extends Command
         }
 
         foreach ($messages as $message) {
+            if ($message->hasPlaceholderBody()) {
+                ResolveWhatsAppMessage::dispatch($message->rowid)->delay(2);
+
+                if ($this->output->isVeryVerbose()) {
+                    $this->line(sprintf(
+                        '  <fg=gray>[msg #%d] body not yet filled — deferred to ResolveWhatsAppMessage</>',
+                        $message->rowid,
+                    ));
+                }
+
+                $reader->markProcessed($message->rowid);
+
+                continue;
+            }
+
             $body = $message->text ?: $message->display_text;
             $matched = $router->match((string) $message->chat_jid, $body);
 

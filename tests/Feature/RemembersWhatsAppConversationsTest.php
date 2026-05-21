@@ -245,6 +245,20 @@ class RemembersWhatsAppConversationsTest extends TestCase
         $this->assertSame('[Alice] hi', $messages[0]->content);
     }
 
+    public function test_messages_prefer_text_over_placeholder_display_text(): void
+    {
+        $this->seedMessage([
+            'rowid' => 1, 'ts' => 1700000000, 'from_me' => 0,
+            'text' => 'real body', 'display_text' => '(message)',
+        ]);
+
+        $agent = (new WhatsAppAgent)->forChat('111@s.whatsapp.net', '111@s.whatsapp.net');
+
+        $messages = $agent->messages();
+
+        $this->assertSame('real body', $messages[0]->content);
+    }
+
     private function seedMessage(array $attrs): void
     {
         DB::connection(WhatsAppMessageReader::CONNECTION_NAME)->table('messages')->insert(array_merge([
