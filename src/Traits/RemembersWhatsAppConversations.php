@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Traits;
 
+use JigarDhulla\LaravelWhatsApp\Conversation\GroupParticipantFormatter;
 use JigarDhulla\LaravelWhatsApp\Models\WhatsAppMessage;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Messages\MessageRole;
@@ -60,17 +61,41 @@ trait RemembersWhatsAppConversations
             return [];
         }
 
-        return WhatsAppMessage::query()
-            ->where('chat_jid', $this->chatJid)
+        $formatter = $this->participantFormatter();
+        $chatJid = $this->chatJid;
+
+        $history = WhatsAppMessage::query()
+            ->where('chat_jid', $chatJid)
             ->limit($this->maxConversationMessages())
             ->orderBy('ts', 'desc')
             ->get()
             ->reverse()
             ->values()
-            ->map(function (WhatsAppMessage $message) {
-                return new Message($this->determineMessageRole($message), $message->display_text ?? $message->text);
+            ->map(function (WhatsAppMessage $message) use ($formatter, $chatJid) {
+                $content = $message->display_text ?? $message->text ?? '';
+
+                if (! $message->from_me) {
+                    $content = $formatter->prefix($chatJid, $message->sender_name, $message->sender_jid, $content);
+                }
+
+                return new Message($this->determineMessageRole($message), $content);
             })
             ->all();
+
+        $note = $formatter->contextNote($chatJid);
+
+        if ($note !== null) {
+            $preamble = [new Message(MessageRole::User, $note)];
+            $ack = $formatter->contextAck($chatJid);
+
+            if ($ack !== null) {
+                $preamble[] = new Message(MessageRole::Assistant, $ack);
+            }
+
+            $history = [...$preamble, ...$history];
+        }
+
+        return $history;
     }
 
     /**
@@ -104,6 +129,16 @@ trait RemembersWhatsAppConversations
     public function conversationParticipant(): ?string
     {
         return $this->senderJid;
+    }
+
+    /**
+     * Resolve the formatter used to label participants and generate the group
+     * context preamble. Override in your agent — or bind a subclass of
+     * GroupParticipantFormatter in the service container — to customize.
+     */
+    public function participantFormatter(): GroupParticipantFormatter
+    {
+        return app(GroupParticipantFormatter::class);
     }
 
     private function determineMessageRole(WhatsAppMessage $message): MessageRole

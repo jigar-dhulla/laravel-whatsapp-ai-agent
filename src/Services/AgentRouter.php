@@ -38,6 +38,33 @@ final class AgentRouter
     }
 
     /**
+     * Per-agent breakdown of why a (chatJid, body) tuple did or didn't match.
+     * Surfaces scope and trigger results independently so callers can show
+     * which check failed for each agent.
+     *
+     * @return array<int, array{agent: string, scope_matches: bool, triggers_match: bool, triggers: array<int, string>}>
+     */
+    public function diagnose(string $chatJid, ?string $body): array
+    {
+        $hasBody = $body !== null && trim($body) !== '';
+
+        $results = [];
+
+        foreach ($this->agents as $agent) {
+            $triggers = array_values(array_filter((array) ($agent['triggers'] ?? [])));
+
+            $results[] = [
+                'agent' => (string) ($agent['agent'] ?? '?'),
+                'scope_matches' => $this->scopeMatches($agent, $chatJid),
+                'triggers_match' => $hasBody && $this->triggersMatch($agent, (string) $body),
+                'triggers' => array_map('strval', $triggers),
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
      * Deduped union of all per-agent chats + groups. Used to determine which
      * JIDs WhatsAppMessageReader should query.
      *

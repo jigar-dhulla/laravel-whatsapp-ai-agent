@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+## [0.2.2]
+
+### Added
+ - Add diagnostics for unmatched chat messages in `ListenCommand` through `AgentRouter`.
+
+## [0.2.1]
+
+### Added
+ - Group participant awareness — agents using `RemembersWhatsAppConversations` automatically distinguish participants in group (`@g.us`) chats. Inbound message history and the current prompt body are prefixed with `[SenderName]`, and a one-turn context note is prepended to the conversation explaining the convention to the LLM. The agent's `instructions()` is untouched — no migration required for existing custom agents.
+ - `formatSenderLabel()` and `groupContextNote()` overridable trait methods for customizing the label format or context note.
+
 ## [0.2.0]
 
 ### Added

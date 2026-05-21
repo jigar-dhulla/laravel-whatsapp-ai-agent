@@ -165,4 +165,97 @@ class ProcessWhatsAppMessageTest extends TestCase
             RecordingWhatsAppAgent::$forChatCalls,
         );
     }
+
+    public function test_it_prefixes_body_with_sender_label_in_group(): void
+    {
+        WhatsAppAgent::fake(['ok']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: 'bob@s.whatsapp.net',
+            senderName: 'Bob',
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        WhatsAppAgent::assertPrompted('[Bob] hey agent');
+    }
+
+    public function test_it_does_not_prefix_body_in_dm(): void
+    {
+        WhatsAppAgent::fake(['ok']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '111@s.whatsapp.net',
+            chatName: 'Alice',
+            senderJid: '111@s.whatsapp.net',
+            senderName: 'Alice',
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        WhatsAppAgent::assertPrompted('hey agent');
+        WhatsAppAgent::assertNotPrompted(fn ($prompt) => str_contains($prompt->prompt, '['));
+    }
+
+    public function test_it_uses_phone_fallback_when_sender_name_is_null_in_group(): void
+    {
+        WhatsAppAgent::fake(['ok']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: '12345@s.whatsapp.net',
+            senderName: null,
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        WhatsAppAgent::assertPrompted('[12345] hey agent');
+    }
+
+    public function test_it_uses_unknown_when_sender_jid_and_name_are_null_in_group(): void
+    {
+        WhatsAppAgent::fake(['ok']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: null,
+            senderName: null,
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+        );
+
+        $job->handle(new Wacli);
+
+        WhatsAppAgent::assertPrompted('[Unknown] hey agent');
+    }
 }

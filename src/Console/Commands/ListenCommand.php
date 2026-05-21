@@ -8,6 +8,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
@@ -125,6 +126,10 @@ class ListenCommand extends Command
                     $message->chat_name ?: $message->chat_jid,
                     count($matched)
                 ));
+
+                if (count($matched) === 0) {
+                    $this->showMatchDiagnostics($router, (string) $message->chat_jid, $body);
+                }
             }
 
             foreach ($matched as $agentConfig) {
@@ -150,6 +155,23 @@ class ListenCommand extends Command
             }
 
             $reader->markProcessed($message->rowid);
+        }
+    }
+
+    private function showMatchDiagnostics(AgentRouter $router, string $chatJid, ?string $body): void
+    {
+        $preview = $body === null || $body === '' ? '(empty)' : Str::limit($body, 120);
+        $this->line(sprintf('  <fg=gray>    body: %s</>', $preview));
+
+        foreach ($router->diagnose($chatJid, $body) as $i => $d) {
+            $this->line(sprintf(
+                '  <fg=gray>    agent #%d %s — scope=%s trigger=%s (triggers: %s)</>',
+                $i + 1,
+                class_basename($d['agent']),
+                $d['scope_matches'] ? 'ok' : 'no',
+                $d['triggers_match'] ? 'ok' : 'no',
+                implode(', ', $d['triggers']) ?: '(all)',
+            ));
         }
     }
 
