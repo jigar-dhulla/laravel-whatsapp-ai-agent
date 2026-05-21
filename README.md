@@ -139,6 +139,8 @@ class CustomAgent implements Agent, Conversational
 
 The number of historical messages included is controlled by `WA_HISTORY_LIMIT` (default `100`). Override `maxConversationMessages()` in your agent class to set a per-agent limit.
 
+Both direct messages and group chats are supported. In groups, the agent automatically distinguishes participants so it can address each person individually.
+
 ### Multiple Agents
 
 One message can match multiple agents simultaneously. Each match dispatches an independent queued job, so agents process in parallel:

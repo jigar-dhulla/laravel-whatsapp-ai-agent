@@ -36,11 +36,14 @@ class ProcessWhatsAppMessage implements ShouldQueue
         /** @var Agent $agent */
         $agent = app($this->agentClass);
 
+        $body = $this->body;
+
         if (in_array(RemembersWhatsAppConversations::class, class_uses_recursive($agent), true)) {
             $agent->forChat($this->chatJid, $this->senderJid);
+            $body = $agent->participantFormatter()->prefix($this->chatJid, $this->senderName, $this->senderJid, $body);
         }
 
-        $response = $agent->prompt($this->body, attachments: $this->attachments);
+        $response = $agent->prompt($body, attachments: $this->attachments);
 
         $reply = $response->text;
 
