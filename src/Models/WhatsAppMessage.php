@@ -40,6 +40,13 @@ class WhatsAppMessage extends Model
 
     public const string MIME_TYPE_PDF = 'application/pdf';
 
+    /**
+     * Sentinel wacli writes to display_text when its async sync hasn't yet
+     * resolved a protocol message's actual content. The row is updated in
+     * place once wacli fills the body. See wacli/internal/app/sync.go.
+     */
+    public const string PLACEHOLDER_BODY = '(message)';
+
     protected $connection = WhatsAppMessageReader::CONNECTION_NAME;
 
     protected $table = 'messages';
@@ -55,6 +62,11 @@ class WhatsAppMessage extends Model
             'ts' => 'timestamp',
             'downloaded_at' => 'timestamp',
         ];
+    }
+
+    public function hasPlaceholderBody(): bool
+    {
+        return ($this->text ?: $this->display_text) === self::PLACEHOLDER_BODY;
     }
 
     /**

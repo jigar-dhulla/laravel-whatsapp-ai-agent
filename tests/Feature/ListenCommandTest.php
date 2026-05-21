@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
+use JigarDhulla\LaravelWhatsApp\Jobs\ResolveWhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 use JigarDhulla\LaravelWhatsApp\Tests\TestCase;
 
@@ -110,6 +111,75 @@ class ListenCommandTest extends TestCase
             ->assertExitCode(0);
 
         Bus::assertDispatchedTimes(ProcessWhatsAppMessage::class, 2);
+    }
+
+    public function test_it_defers_placeholder_rows_to_resolve_job_and_advances_bookmark(): void
+    {
+        $this->seedSchema();
+
+        config()->set('whatsapp-agent.agents', [[
+            'agent' => WhatsAppAgent::class,
+            'triggers' => ['agent'],
+            'chats' => ['111@s.whatsapp.net'],
+            'groups' => [],
+        ]]);
+
+        DB::connection(WhatsAppMessageReader::CONNECTION_NAME)->table('messages')->insert([
+            ['rowid' => 1, 'chat_jid' => '111@s.whatsapp.net', 'chat_name' => 'Alice', 'msg_id' => 'M1', 'sender_jid' => '111@s.whatsapp.net', 'sender_name' => 'Alice', 'ts' => 1700000000, 'from_me' => 0, 'text' => null, 'display_text' => '(message)'],
+        ]);
+
+        Process::preventStrayProcesses();
+        Process::fake([
+            '*sync*' => Process::result(output: json_encode(['success' => true, 'data' => ['messages_stored' => 0]])),
+        ]);
+
+        Bus::fake();
+
+        $this->partialMock(WhatsAppMessageReader::class, function ($mock) {
+            $mock->shouldReceive('bookmarkCurrentHead')->once()->andReturn(0);
+            $mock->shouldReceive('markProcessed')->once()->with(1);
+        });
+
+        $this->artisan('wa:listen', ['--once' => true])
+            ->assertExitCode(0);
+
+        Bus::assertDispatched(ResolveWhatsAppMessage::class, function (ResolveWhatsAppMessage $job) {
+            return $job->rowid === 1;
+        });
+        Bus::assertNotDispatched(ProcessWhatsAppMessage::class);
+    }
+
+    public function test_it_does_not_dispatch_resolve_job_for_real_messages(): void
+    {
+        $this->seedSchema();
+
+        config()->set('whatsapp-agent.agents', [[
+            'agent' => WhatsAppAgent::class,
+            'triggers' => ['agent'],
+            'chats' => ['111@s.whatsapp.net'],
+            'groups' => [],
+        ]]);
+
+        DB::connection(WhatsAppMessageReader::CONNECTION_NAME)->table('messages')->insert([
+            ['rowid' => 1, 'chat_jid' => '111@s.whatsapp.net', 'chat_name' => 'Alice', 'msg_id' => 'M1', 'sender_jid' => '111@s.whatsapp.net', 'sender_name' => 'Alice', 'ts' => 1700000000, 'from_me' => 0, 'text' => 'hey agent', 'display_text' => 'hey agent'],
+        ]);
+
+        Process::preventStrayProcesses();
+        Process::fake([
+            '*sync*' => Process::result(output: json_encode(['success' => true, 'data' => ['messages_stored' => 0]])),
+        ]);
+
+        Bus::fake();
+
+        $this->partialMock(WhatsAppMessageReader::class, function ($mock) {
+            $mock->shouldReceive('bookmarkCurrentHead')->once()->andReturn(0);
+        });
+
+        $this->artisan('wa:listen', ['--once' => true])
+            ->assertExitCode(0);
+
+        Bus::assertNotDispatched(ResolveWhatsAppMessage::class);
+        Bus::assertDispatched(ProcessWhatsAppMessage::class);
     }
 
     private function seedSchema(): void
