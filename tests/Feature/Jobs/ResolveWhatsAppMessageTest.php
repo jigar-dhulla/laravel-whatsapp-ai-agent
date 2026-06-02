@@ -66,7 +66,8 @@ class ResolveWhatsAppMessageTest extends TestCase
         Bus::assertDispatched(ProcessWhatsAppMessage::class, function (ProcessWhatsAppMessage $job) {
             return $job->body === 'hey agent'
                 && $job->agentClass === WhatsAppAgent::class
-                && $job->chatJid === '111@s.whatsapp.net';
+                && $job->chatJid === '111@s.whatsapp.net'
+                && $job->ts->getTimestamp() === 1700000000;
         });
     }
 

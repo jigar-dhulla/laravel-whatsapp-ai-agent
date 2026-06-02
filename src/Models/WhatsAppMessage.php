@@ -59,7 +59,7 @@ class WhatsAppMessage extends Model
     {
         return [
             'from_me' => 'boolean',
-            'ts' => 'timestamp',
+            'ts' => 'datetime',
             'downloaded_at' => 'timestamp',
         ];
     }

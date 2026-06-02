@@ -75,7 +75,7 @@ trait RemembersWhatsAppConversations
                 $content = (string) ($message->text ?: $message->display_text);
 
                 if (! $message->from_me) {
-                    $content = $formatter->prefix($chatJid, $message->sender_name, $message->sender_jid, $content);
+                    $content = $formatter->prefix($chatJid, $message->sender_name, $message->sender_jid, $message->ts, $content);
                 }
 
                 return new Message($this->determineMessageRole($message), $content);

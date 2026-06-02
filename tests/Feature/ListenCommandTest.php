@@ -69,7 +69,9 @@ class ListenCommandTest extends TestCase
             ->assertExitCode(0);
 
         Bus::assertDispatched(ProcessWhatsAppMessage::class, function ($job) {
-            return $job->body === 'hey agent' && $job->agentClass === WhatsAppAgent::class;
+            return $job->body === 'hey agent'
+                && $job->agentClass === WhatsAppAgent::class
+                && $job->ts->getTimestamp() === 1700000001;
         });
     }
 

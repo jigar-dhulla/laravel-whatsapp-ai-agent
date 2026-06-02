@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Conversation;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -26,7 +27,7 @@ class GroupParticipantFormatter
      * Return the bracketed sender label for a group message, or null when no
      * label should be applied (DMs, or when overridden to opt out).
      */
-    public function senderLabel(?string $chatJid, ?string $senderName, ?string $senderJid): ?string
+    public function senderLabel(?string $chatJid, ?string $senderName, ?string $senderJid, Carbon $datetime): ?string
     {
         if (! $this->isGroupChat($chatJid)) {
             return null;
@@ -36,7 +37,7 @@ class GroupParticipantFormatter
             ?? $this->phoneFromJid($senderJid)
             ?? 'Unknown';
 
-        return "[{$label}]";
+        return "[{$label}@{$datetime->format('Y-m-d H:i:s')}]";
     }
 
     private function blankToNull(?string $value): ?string
@@ -57,9 +58,9 @@ class GroupParticipantFormatter
      * Prefix the given content with the sender label when one applies.
      * Returns the content unchanged for DMs.
      */
-    public function prefix(?string $chatJid, ?string $senderName, ?string $senderJid, string $content): string
+    public function prefix(?string $chatJid, ?string $senderName, ?string $senderJid, Carbon $datetime, string $content): string
     {
-        $label = $this->senderLabel($chatJid, $senderName, $senderJid);
+        $label = $this->senderLabel($chatJid, $senderName, $senderJid, $datetime);
 
         return $label === null ? $content : "{$label} {$content}";
     }
@@ -75,7 +76,7 @@ class GroupParticipantFormatter
         }
 
         return '[Note: This is a WhatsApp group chat. Each user message below is '
-            .'prefixed with the sender\'s name in square brackets, e.g. "[Alice] hello". '
+            .'prefixed with the sender\'s name & datetime in square brackets, e.g. "[Alice@2025-12-04 13:00:00] hello". '
             .'Address participants by their names. Do not prefix your own replies.]';
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Tests\Feature\Jobs;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Process;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
@@ -40,6 +41,7 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: 'Alice',
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
@@ -71,6 +73,7 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: 'Alice',
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
             replyToMsgId: 'MSG-42',
         );
 
@@ -99,6 +102,7 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: null,
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle($wacli);
@@ -124,6 +128,7 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: 'Alice',
             body: 'hey simple agent',
             agentClass: SimplePromptableAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
@@ -156,6 +161,7 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: 'Bob',
             body: 'hey agent',
             agentClass: RecordingWhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
@@ -182,11 +188,12 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: 'Bob',
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
 
-        WhatsAppAgent::assertPrompted('[Bob] hey agent');
+        WhatsAppAgent::assertPrompted('[Bob@2025-12-04 13:00:00] hey agent');
     }
 
     public function test_it_does_not_prefix_body_in_dm(): void
@@ -205,6 +212,7 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: 'Alice',
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
@@ -229,11 +237,12 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: null,
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
 
-        WhatsAppAgent::assertPrompted('[12345] hey agent');
+        WhatsAppAgent::assertPrompted('[12345@2025-12-04 13:00:00] hey agent');
     }
 
     public function test_it_uses_unknown_when_sender_jid_and_name_are_null_in_group(): void
@@ -252,10 +261,11 @@ class ProcessWhatsAppMessageTest extends TestCase
             senderName: null,
             body: 'hey agent',
             agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
         );
 
         $job->handle(new Wacli);
 
-        WhatsAppAgent::assertPrompted('[Unknown] hey agent');
+        WhatsAppAgent::assertPrompted('[Unknown@2025-12-04 13:00:00] hey agent');
     }
 }
