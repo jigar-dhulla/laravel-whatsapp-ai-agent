@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
  - Trigger agents when one of their own messages is quoted/replied to. A reply to a message the account previously sent (`from_me`) activates every in-scope agent regardless of configured triggers, so users can follow up on an agent reply without re-tagging it.
+ - Add datetime details in message context for group chat
 
 ## [0.2.3]
 
