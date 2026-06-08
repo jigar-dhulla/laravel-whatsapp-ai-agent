@@ -114,6 +114,37 @@ class AgentRouterTest extends TestCase
         $this->assertSame(['111@s.whatsapp.net'], $matched[0]['chats']);
     }
 
+    public function test_reply_to_own_message_matches_even_when_trigger_absent(): void
+    {
+        $router = new AgentRouter([$this->agent(['triggers' => ['@agent']])]);
+
+        $matched = $router->match('111@s.whatsapp.net', 'just chatting', quotesOwnMessage: true);
+
+        $this->assertCount(1, $matched);
+    }
+
+    public function test_reply_to_own_message_matches_with_empty_body(): void
+    {
+        $router = new AgentRouter([$this->agent(['triggers' => ['@agent']])]);
+
+        $this->assertCount(1, $router->match('111@s.whatsapp.net', '', quotesOwnMessage: true));
+        $this->assertCount(1, $router->match('111@s.whatsapp.net', null, quotesOwnMessage: true));
+    }
+
+    public function test_reply_to_own_message_still_requires_scope(): void
+    {
+        $router = new AgentRouter([$this->agent(['chats' => ['222@s.whatsapp.net']])]);
+
+        $this->assertSame([], $router->match('111@s.whatsapp.net', 'hello', quotesOwnMessage: true));
+    }
+
+    public function test_reply_to_own_message_does_not_activate_inactive_agent(): void
+    {
+        $router = new AgentRouter([$this->agent(['chats' => [], 'groups' => []])]);
+
+        $this->assertSame([], $router->match('111@s.whatsapp.net', 'hello', quotesOwnMessage: true));
+    }
+
     public function test_allowed_jids_returns_deduped_union_of_all_agent_scopes(): void
     {
         $agentA = $this->agent(['chats' => ['aaa@s.whatsapp.net', 'bbb@s.whatsapp.net'], 'groups' => []]);
