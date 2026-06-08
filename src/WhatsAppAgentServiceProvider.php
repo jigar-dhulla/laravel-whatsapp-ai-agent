@@ -10,6 +10,8 @@ use JigarDhulla\LaravelWhatsApp\Console\Commands\GroupsCommand;
 use JigarDhulla\LaravelWhatsApp\Console\Commands\ListenCommand;
 use JigarDhulla\LaravelWhatsApp\Console\Commands\SetupCommand;
 use JigarDhulla\LaravelWhatsApp\Console\Commands\StatusCommand;
+use JigarDhulla\LaravelWhatsApp\Listening\NativeSleeper;
+use JigarDhulla\LaravelWhatsApp\Listening\Sleeper;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 
@@ -21,6 +23,7 @@ class WhatsAppAgentServiceProvider extends ServiceProvider
 
         $this->app->singleton(Wacli::class);
         $this->app->singleton(WhatsAppMessageReader::class);
+        $this->app->bind(Sleeper::class, NativeSleeper::class);
     }
 
     public function boot(): void

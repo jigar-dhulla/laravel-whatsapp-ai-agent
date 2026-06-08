@@ -10,15 +10,15 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use JigarDhulla\LaravelWhatsApp\Listening\ConsoleListenerReporter;
 use JigarDhulla\LaravelWhatsApp\Listening\MessagePipeline;
+use JigarDhulla\LaravelWhatsApp\Listening\PollingLoop;
 use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
-use Throwable;
 
 #[Signature('wa:listen {--once : Run a single polling iteration and exit} {--max-iterations= : Stop after this many iterations}')]
 #[Description('Poll the wacli sqlite DB for new messages, run them through the configured agents, and reply.')]
 class ListenCommand extends Command
 {
-    public function handle(WhatsAppMessageReader $reader, MessagePipeline $pipeline): int
+    public function handle(WhatsAppMessageReader $reader, MessagePipeline $pipeline, PollingLoop $loop): int
     {
         $agents = (array) config('whatsapp-agent.agents', []);
 
@@ -54,28 +54,14 @@ class ListenCommand extends Command
 
         $reporter->listening(count($agents), count($jids), $interval);
 
-        $iterations = 0;
         $maxIterations = $this->option('once') ? 1 : ($this->option('max-iterations') !== null ? (int) $this->option('max-iterations') : null);
 
-        while ($maxIterations === null || $iterations < $maxIterations) {
-            $iterations++;
-
-            $reporter->tick($iterations);
-
-            try {
-                $pipeline->process($reader, $router, $reporter);
-            } catch (Throwable $e) {
-                $reporter->iterationFailed($e);
-
-                report($e);
-            }
-
-            if ($maxIterations !== null && $iterations >= $maxIterations) {
-                break;
-            }
-
-            sleep($interval);
-        }
+        $loop->run(
+            fn () => $pipeline->process($reader, $router, $reporter),
+            $interval,
+            $maxIterations,
+            $reporter,
+        );
 
         return self::SUCCESS;
     }
