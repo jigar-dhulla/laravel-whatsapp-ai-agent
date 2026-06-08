@@ -40,17 +40,7 @@ class ResolveWhatsAppMessage implements ShouldQueue
         $matched = AgentRouter::fromConfig()->match((string) $message->chat_jid, $body);
 
         foreach ($matched as $agentConfig) {
-            ProcessWhatsAppMessage::dispatch(
-                (string) $message->chat_jid,
-                $message->chat_name !== null ? (string) $message->chat_name : null,
-                $message->sender_jid !== null ? (string) $message->sender_jid : null,
-                $message->sender_name !== null ? (string) $message->sender_name : null,
-                (string) $body,
-                (string) $agentConfig['agent'],
-                $message->ts,
-                $message->getAttachments(),
-                $message->msg_id,
-            );
+            dispatch(ProcessWhatsAppMessage::forMessage($message, (string) $agentConfig['agent'], $body));
         }
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Carbon;
+use JigarDhulla\LaravelWhatsApp\Models\WhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -32,6 +33,28 @@ class ProcessWhatsAppMessage implements ShouldQueue
         public readonly array $attachments = [],
         public readonly ?string $replyToMsgId = null,
     ) {}
+
+    /**
+     * Build a job from a stored message for the given agent class. Centralizes
+     * the mapping from a WhatsAppMessage row to the job's constructor so the
+     * listener pipeline and ResolveWhatsAppMessage stay in sync.
+     */
+    public static function forMessage(WhatsAppMessage $message, string $agentClass, ?string $body = null): self
+    {
+        $body ??= $message->text ?: $message->display_text;
+
+        return new self(
+            (string) $message->chat_jid,
+            $message->chat_name !== null ? (string) $message->chat_name : null,
+            $message->sender_jid !== null ? (string) $message->sender_jid : null,
+            $message->sender_name !== null ? (string) $message->sender_name : null,
+            (string) $body,
+            $agentClass,
+            $message->ts,
+            $message->getAttachments(),
+            $message->msg_id,
+        );
+    }
 
     public function handle(Wacli $wacli): void
     {
