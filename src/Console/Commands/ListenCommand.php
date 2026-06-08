@@ -8,10 +8,8 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use JigarDhulla\LaravelWhatsApp\Jobs\ProcessWhatsAppMessage;
-use JigarDhulla\LaravelWhatsApp\Jobs\ResolveWhatsAppMessage;
 use JigarDhulla\LaravelWhatsApp\Listening\ConsoleListenerReporter;
-use JigarDhulla\LaravelWhatsApp\Listening\Contracts\ListenerReporter;
+use JigarDhulla\LaravelWhatsApp\Listening\MessagePipeline;
 use JigarDhulla\LaravelWhatsApp\Services\AgentRouter;
 use JigarDhulla\LaravelWhatsApp\Services\WhatsAppMessageReader;
 use Throwable;
@@ -20,7 +18,7 @@ use Throwable;
 #[Description('Poll the wacli sqlite DB for new messages, run them through the configured agents, and reply.')]
 class ListenCommand extends Command
 {
-    public function handle(WhatsAppMessageReader $reader): int
+    public function handle(WhatsAppMessageReader $reader, MessagePipeline $pipeline): int
     {
         $agents = (array) config('whatsapp-agent.agents', []);
 
@@ -65,7 +63,7 @@ class ListenCommand extends Command
             $reporter->tick($iterations);
 
             try {
-                $this->processBatch($reader, $router, $reporter);
+                $pipeline->process($reader, $router, $reporter);
             } catch (Throwable $e) {
                 $reporter->iterationFailed($e);
 
@@ -80,38 +78,5 @@ class ListenCommand extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    private function processBatch(WhatsAppMessageReader $reader, AgentRouter $router, ListenerReporter $reporter): void
-    {
-        $messages = $reader->fetchNew($router);
-
-        $reporter->batchFound($messages->count());
-
-        foreach ($messages as $message) {
-            if ($message->hasPlaceholderBody()) {
-                ResolveWhatsAppMessage::dispatch($message->rowid)->delay(2);
-
-                $reporter->messageDeferred($message);
-
-                $reader->markProcessed($message->rowid);
-
-                continue;
-            }
-
-            $body = $message->text ?: $message->display_text;
-            $quotesOwnMessage = $message->quotesOwnMessage();
-            $matched = $router->match((string) $message->chat_jid, $body, $quotesOwnMessage);
-
-            $reporter->messageScanned($router, $message, $matched, $quotesOwnMessage, $body);
-
-            foreach ($matched as $agentConfig) {
-                dispatch(ProcessWhatsAppMessage::forMessage($message, (string) $agentConfig['agent'], $body));
-
-                $reporter->jobDispatched($message, (string) $agentConfig['agent']);
-            }
-
-            $reader->markProcessed($message->rowid);
-        }
     }
 }
