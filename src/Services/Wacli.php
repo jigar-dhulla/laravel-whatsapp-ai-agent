@@ -180,17 +180,13 @@ class Wacli
      * Pass $replyTo to quote a stored message by its ID. For replies in groups
      * where the original message has not been synced locally, also pass
      * $replyToSender with the original sender's JID.
-     *
-     * Returns [success, stdout, stderr].
-     *
-     * @return array{0: bool, 1: string, 2: string}
      */
     public function send(
         string $jid,
         string $message,
         ?string $replyTo = null,
         ?string $replyToSender = null,
-    ): array {
+    ): WacliSendResult {
         $arguments = [
             'send', 'text',
             '--to', $jid,
@@ -211,7 +207,7 @@ class Wacli
 
         $result = $this->runBinary($arguments);
 
-        return [$result->successful(), $result->output(), $result->errorOutput()];
+        return new WacliSendResult($result->successful(), $result->output(), $result->errorOutput());
     }
 
     protected function runBinary(array $arguments, ?int $timeout = null): ProcessResult

@@ -123,17 +123,17 @@ class WacliServiceTest extends TestCase
         $this->assertSame([], (new Wacli('wacli'))->groups());
     }
 
-    public function test_send_returns_success_tuple_on_zero_exit(): void
+    public function test_send_returns_success_result_on_zero_exit(): void
     {
         Process::fake([
             '*' => Process::result(output: '{"success":true}', exitCode: 0),
         ]);
 
-        [$ok, $stdout, $stderr] = (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hello');
+        $result = (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hello');
 
-        $this->assertTrue($ok);
-        $this->assertStringContainsString('{"success":true}', $stdout);
-        $this->assertSame('', trim($stderr));
+        $this->assertTrue($result->successful);
+        $this->assertStringContainsString('{"success":true}', $result->output);
+        $this->assertSame('', trim($result->errorOutput));
     }
 
     public function test_send_emits_reply_to_flag_when_provided(): void
@@ -194,17 +194,17 @@ class WacliServiceTest extends TestCase
         });
     }
 
-    public function test_send_returns_failure_tuple_on_nonzero_exit(): void
+    public function test_send_returns_failure_result_on_nonzero_exit(): void
     {
         Process::fake([
             '*' => Process::result(exitCode: 1, errorOutput: 'not connected'),
         ]);
 
-        [$ok, $stdout, $stderr] = (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hello');
+        $result = (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hello');
 
-        $this->assertFalse($ok);
-        $this->assertSame('', trim($stdout));
-        $this->assertStringContainsString('not connected', $stderr);
+        $this->assertFalse($result->successful);
+        $this->assertSame('', trim($result->output));
+        $this->assertStringContainsString('not connected', $result->errorOutput);
     }
 
     public function test_locate_binary_returns_trimmed_path(): void

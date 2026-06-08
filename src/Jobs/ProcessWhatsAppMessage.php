@@ -76,13 +76,13 @@ class ProcessWhatsAppMessage implements ShouldQueue
             return;
         }
 
-        [$isOk, , $errorOutput] = $wacli->send(
+        $result = $wacli->send(
             $this->chatJid,
             $reply,
             replyTo: $this->replyToMsgId,
         );
 
-        if (! $isOk && $errorOutput !== '') {
+        if (! $result->successful && $result->errorOutput !== '') {
             $this->fail();
         }
     }
