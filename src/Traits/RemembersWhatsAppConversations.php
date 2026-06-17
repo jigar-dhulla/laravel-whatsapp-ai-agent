@@ -15,13 +15,17 @@ trait RemembersWhatsAppConversations
 
     protected ?string $senderJid = null;
 
+    protected ?string $senderName = null;
+
     /**
-     * Start a conversation in the given chat, optionally scoped to a sender JID.
+     * Start a conversation in the given chat, optionally scoped to a sender JID
+     * and their display name.
      */
-    public function forChat(string $chatJid, ?string $senderJid = null): static
+    public function forChat(string $chatJid, ?string $senderJid = null, ?string $senderName = null): static
     {
         $this->chatJid = $chatJid;
         $this->senderJid = $senderJid;
+        $this->senderName = $senderName;
 
         return $this;
     }
@@ -129,6 +133,14 @@ trait RemembersWhatsAppConversations
     public function conversationParticipant(): ?string
     {
         return $this->senderJid;
+    }
+
+    /**
+     * Get the display name of the user having the current conversation, when known.
+     */
+    public function conversationParticipantName(): ?string
+    {
+        return $this->senderName;
     }
 
     /**

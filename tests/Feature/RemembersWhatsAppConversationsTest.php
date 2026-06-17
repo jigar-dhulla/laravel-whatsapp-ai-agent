@@ -69,6 +69,20 @@ class RemembersWhatsAppConversationsTest extends TestCase
         $this->assertSame('nobody@s.whatsapp.net', $agent->conversationParticipant());
     }
 
+    public function test_for_chat_captures_sender_name(): void
+    {
+        $agent = (new WhatsAppAgent)->forChat('999@g.us', '222@s.whatsapp.net', 'Bob');
+
+        $this->assertSame('Bob', $agent->conversationParticipantName());
+    }
+
+    public function test_for_chat_leaves_sender_name_null_when_not_provided(): void
+    {
+        $agent = (new WhatsAppAgent)->forChat('999@g.us', '222@s.whatsapp.net');
+
+        $this->assertNull($agent->conversationParticipantName());
+    }
+
     public function test_messages_returns_an_array_of_message_objects(): void
     {
         $this->seedMessage(['rowid' => 1, 'ts' => 1700000000, 'from_me' => 0, 'text' => 'hi']);
