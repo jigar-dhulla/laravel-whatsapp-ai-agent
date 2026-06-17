@@ -167,7 +167,7 @@ class ProcessWhatsAppMessageTest extends TestCase
         $job->handle(new Wacli);
 
         $this->assertSame(
-            [['111@s.whatsapp.net', '222@s.whatsapp.net']],
+            [['111@s.whatsapp.net', '222@s.whatsapp.net', 'Bob']],
             RecordingWhatsAppAgent::$forChatCalls,
         );
     }
