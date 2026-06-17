@@ -8,6 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Carbon;
 use JigarDhulla\LaravelWhatsApp\Services\Wacli;
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 use Laravel\Ai\Contracts\Agent;
@@ -27,6 +28,7 @@ class ProcessWhatsAppMessage implements ShouldQueue
         public readonly ?string $senderName,
         public readonly string $body,
         public readonly string $agentClass,
+        public readonly Carbon $ts,
         public readonly array $attachments = [],
         public readonly ?string $replyToMsgId = null,
     ) {}
@@ -39,8 +41,8 @@ class ProcessWhatsAppMessage implements ShouldQueue
         $body = $this->body;
 
         if (in_array(RemembersWhatsAppConversations::class, class_uses_recursive($agent), true)) {
-            $agent->forChat($this->chatJid, $this->senderJid);
-            $body = $agent->participantFormatter()->prefix($this->chatJid, $this->senderName, $this->senderJid, $body);
+            $agent->forChat($this->chatJid, $this->senderJid, $this->senderName);
+            $body = $agent->participantFormatter()->prefix($this->chatJid, $this->senderName, $this->senderJid, $this->ts, $body);
         }
 
         $response = $agent->prompt($body, attachments: $this->attachments);

@@ -33,6 +33,8 @@ use Laravel\Ai\Files\Image;
  * @property int|null $file_length
  * @property string|null $local_path
  * @property Carbon|null $downloaded_at
+ * @property string|null $quoted_msg_id
+ * @property string|null $quoted_sender_jid
  */
 class WhatsAppMessage extends Model
 {
@@ -59,7 +61,7 @@ class WhatsAppMessage extends Model
     {
         return [
             'from_me' => 'boolean',
-            'ts' => 'timestamp',
+            'ts' => 'datetime',
             'downloaded_at' => 'timestamp',
         ];
     }
@@ -67,6 +69,25 @@ class WhatsAppMessage extends Model
     public function hasPlaceholderBody(): bool
     {
         return ($this->text ?: $this->display_text) === self::PLACEHOLDER_BODY;
+    }
+
+    /**
+     * Whether this message replies to (quotes) a message we sent. wacli stores
+     * our own outbound messages with from_me=true, so the quoted message being
+     * one of ours is the authoritative signal — more reliable than comparing
+     * quoted_sender_jid to the account JID, which wacli does not consistently
+     * set to the linked account for outbound rows.
+     */
+    public function quotesOwnMessage(): bool
+    {
+        if ($this->quoted_msg_id === null || $this->quoted_msg_id === '') {
+            return false;
+        }
+
+        return static::query()
+            ->where('msg_id', $this->quoted_msg_id)
+            ->where('from_me', true)
+            ->exists();
     }
 
     /**

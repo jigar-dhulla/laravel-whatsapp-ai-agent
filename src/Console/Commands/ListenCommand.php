@@ -131,16 +131,18 @@ class ListenCommand extends Command
             }
 
             $body = $message->text ?: $message->display_text;
-            $matched = $router->match((string) $message->chat_jid, $body);
+            $quotesOwnMessage = $message->quotesOwnMessage();
+            $matched = $router->match((string) $message->chat_jid, $body, $quotesOwnMessage);
 
             // -vv: show every scanned message
             if ($this->output->isVeryVerbose()) {
                 $this->line(sprintf(
-                    '  <fg=gray>[msg #%d] %s in [%s] — agents matched: %d</>',
+                    '  <fg=gray>[msg #%d] %s in [%s] — agents matched: %d%s</>',
                     $message->rowid,
                     $message->sender_name ?: $message->sender_jid,
                     $message->chat_name ?: $message->chat_jid,
-                    count($matched)
+                    count($matched),
+                    $quotesOwnMessage ? ' (reply to agent)' : ''
                 ));
 
                 if (count($matched) === 0) {
@@ -156,6 +158,7 @@ class ListenCommand extends Command
                     $message->sender_name !== null ? (string) $message->sender_name : null,
                     (string) $body,
                     (string) $agentConfig['agent'],
+                    $message->ts,
                     $message->getAttachments(),
                     $message->msg_id,
                 );

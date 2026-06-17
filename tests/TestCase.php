@@ -39,6 +39,8 @@ abstract class TestCase extends BaseTestCase
             $table->text('text')->nullable();
             $table->text('display_text')->nullable();
             $table->string('media_type')->nullable();
+            $table->string('quoted_msg_id')->nullable();
+            $table->string('quoted_sender_jid')->nullable();
         });
     }
 }

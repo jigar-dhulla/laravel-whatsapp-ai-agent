@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JigarDhulla\LaravelWhatsApp\Tests\Feature;
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent;
 use JigarDhulla\LaravelWhatsApp\Conversation\GroupParticipantFormatter;
@@ -68,6 +69,20 @@ class RemembersWhatsAppConversationsTest extends TestCase
         $this->assertSame('nobody@s.whatsapp.net', $agent->conversationParticipant());
     }
 
+    public function test_for_chat_captures_sender_name(): void
+    {
+        $agent = (new WhatsAppAgent)->forChat('999@g.us', '222@s.whatsapp.net', 'Bob');
+
+        $this->assertSame('Bob', $agent->conversationParticipantName());
+    }
+
+    public function test_for_chat_leaves_sender_name_null_when_not_provided(): void
+    {
+        $agent = (new WhatsAppAgent)->forChat('999@g.us', '222@s.whatsapp.net');
+
+        $this->assertNull($agent->conversationParticipantName());
+    }
+
     public function test_messages_returns_an_array_of_message_objects(): void
     {
         $this->seedMessage(['rowid' => 1, 'ts' => 1700000000, 'from_me' => 0, 'text' => 'hi']);
@@ -103,11 +118,11 @@ class RemembersWhatsAppConversationsTest extends TestCase
         $messages = $agent->messages();
 
         // Preamble in groups is [context note, ack], so historical rows start at index 2.
-        $this->assertSame('[Alice] first', $messages[2]->content);
+        $this->assertSame('[Alice@2023-11-14 22:13:20] first', $messages[2]->content);
         $this->assertSame(MessageRole::User, $messages[2]->role);
         $this->assertSame('agent reply', $messages[3]->content);
         $this->assertSame(MessageRole::Assistant, $messages[3]->role);
-        $this->assertSame('[Bob] second', $messages[4]->content);
+        $this->assertSame('[Bob@2023-11-14 22:13:40] second', $messages[4]->content);
         $this->assertSame(MessageRole::User, $messages[4]->role);
     }
 
@@ -135,7 +150,7 @@ class RemembersWhatsAppConversationsTest extends TestCase
 
         $messages = $agent->messages();
 
-        $this->assertSame('[12345] hello', $messages[2]->content);
+        $this->assertSame('[12345@2023-11-14 22:13:20] hello', $messages[2]->content);
     }
 
     public function test_sender_label_format_is_overridable_via_formatter(): void
@@ -148,7 +163,7 @@ class RemembersWhatsAppConversationsTest extends TestCase
 
         $formatter = new class extends GroupParticipantFormatter
         {
-            public function senderLabel(?string $chatJid, ?string $senderName, ?string $senderJid): ?string
+            public function senderLabel(?string $chatJid, ?string $senderName, ?string $senderJid, Carbon $datetime): ?string
             {
                 if (! $this->isGroupChat($chatJid) || $senderName === null) {
                     return null;
@@ -242,7 +257,7 @@ class RemembersWhatsAppConversationsTest extends TestCase
         $messages = $agent->messages();
 
         $this->assertCount(1, $messages);
-        $this->assertSame('[Alice] hi', $messages[0]->content);
+        $this->assertSame('[Alice@2023-11-14 22:13:20] hi', $messages[0]->content);
     }
 
     public function test_messages_prefer_text_over_placeholder_display_text(): void

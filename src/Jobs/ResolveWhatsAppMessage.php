@@ -47,6 +47,7 @@ class ResolveWhatsAppMessage implements ShouldQueue
                 $message->sender_name !== null ? (string) $message->sender_name : null,
                 (string) $body,
                 (string) $agentConfig['agent'],
+                $message->ts,
                 $message->getAttachments(),
                 $message->msg_id,
             );

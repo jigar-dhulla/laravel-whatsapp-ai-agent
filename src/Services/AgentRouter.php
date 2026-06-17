@@ -23,17 +23,22 @@ final class AgentRouter
      * triggers match $body. An agent with empty chats AND groups is inactive
      * and never matches.
      *
+     * When $quotesOwnMessage is true the message replies to one of our own
+     * messages, which activates every in-scope agent regardless of triggers
+     * (and regardless of an empty body, e.g. a media-only reply).
+     *
      * @return array<int, array<string, mixed>>
      */
-    public function match(string $chatJid, ?string $body): array
+    public function match(string $chatJid, ?string $body, bool $quotesOwnMessage = false): array
     {
-        if ($body === null || trim($body) === '') {
+        if (! $quotesOwnMessage && ($body === null || trim($body) === '')) {
             return [];
         }
 
         return array_values(array_filter(
             $this->agents,
-            fn (array $a) => $this->scopeMatches($a, $chatJid) && $this->triggersMatch($a, $body)
+            fn (array $a) => $this->scopeMatches($a, $chatJid)
+                && ($quotesOwnMessage || $this->triggersMatch($a, (string) $body))
         ));
     }
 
