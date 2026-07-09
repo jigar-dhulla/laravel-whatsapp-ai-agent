@@ -194,6 +194,48 @@ class WacliServiceTest extends TestCase
         });
     }
 
+    public function test_send_emits_mention_flag_per_mention(): void
+    {
+        Process::fake([
+            '*' => Process::result(output: '{"success":true}', exitCode: 0),
+        ]);
+
+        (new Wacli('wacli'))->send(
+            '456@g.us',
+            'Hi @111 and @222',
+            mentions: ['111@lid', '222@s.whatsapp.net'],
+        );
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $mentioned = [];
+
+            foreach ($command as $i => $arg) {
+                if ($arg === '--mention') {
+                    $mentioned[] = $command[$i + 1] ?? null;
+                }
+            }
+
+            return $mentioned === ['111@lid', '222@s.whatsapp.net'];
+        });
+    }
+
+    public function test_send_omits_mention_flag_when_no_mentions(): void
+    {
+        Process::fake([
+            '*' => Process::result(output: '{"success":true}', exitCode: 0),
+        ]);
+
+        (new Wacli('wacli'))->send('123@s.whatsapp.net', 'Hi', mentions: ['']);
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            return ! in_array('--mention', $command, true);
+        });
+    }
+
     public function test_send_returns_failure_tuple_on_nonzero_exit(): void
     {
         Process::fake([

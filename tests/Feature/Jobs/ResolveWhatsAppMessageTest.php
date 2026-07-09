@@ -67,8 +67,28 @@ class ResolveWhatsAppMessageTest extends TestCase
             return $job->body === 'hey agent'
                 && $job->agentClass === WhatsAppAgent::class
                 && $job->chatJid === '111@s.whatsapp.net'
-                && $job->ts->getTimestamp() === 1700000000;
+                && $job->ts->getTimestamp() === 1700000000
+                && $job->mentionSender === false;
         });
+    }
+
+    public function test_it_forwards_mention_sender_agent_config_to_process_job(): void
+    {
+        $this->seedMessage(['rowid' => 1, 'text' => 'hey agent', 'display_text' => 'hey agent']);
+
+        config()->set('whatsapp-agent.agents', [[
+            'agent' => WhatsAppAgent::class,
+            'triggers' => ['agent'],
+            'chats' => ['111@s.whatsapp.net'],
+            'groups' => [],
+            'mention_sender' => true,
+        ]]);
+
+        Bus::fake();
+
+        (new ResolveWhatsAppMessage(1))->handle();
+
+        Bus::assertDispatched(ProcessWhatsAppMessage::class, fn (ProcessWhatsAppMessage $job) => $job->mentionSender === true);
     }
 
     public function test_it_dispatches_one_process_job_per_matching_agent(): void

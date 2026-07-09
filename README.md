@@ -69,6 +69,7 @@ return [
     |
     | - triggers: [] matches every message in this agent's scope
     | - chats/groups: at least one entry total — empty scope = inactive agent
+    | - mention_sender: tag the sender in group replies so they get notified
     */
     'agents' => [
         [
@@ -76,6 +77,7 @@ return [
             'triggers' => [],
             'chats'    => [],
             'groups'   => [],
+            'mention_sender' => false,
         ],
     ],
 
@@ -140,6 +142,24 @@ class CustomAgent implements Agent, Conversational
 The number of historical messages included is controlled by `WA_HISTORY_LIMIT` (default `100`). Override `maxConversationMessages()` in your agent class to set a per-agent limit.
 
 Both direct messages and group chats are supported. In groups, the agent automatically distinguishes participants so it can address each person individually.
+
+#### Mentioning the sender in group replies
+
+Set `mention_sender => true` on an agent's config entry to have its group replies tag the person it is responding to, using WhatsApp's mention mechanism (wacli's `--mention` flag). The reply is prefixed with the sender's `@<number>` token — rendered by WhatsApp as a tappable `@Name` — so they are notified even when they have muted the group:
+
+```php
+'agents' => [
+    [
+        'agent'          => \App\Ai\Agents\SupportAgent::class,
+        'triggers'       => ['@support'],
+        'chats'          => [],
+        'groups'         => ['group1@g.us'],
+        'mention_sender' => true,
+    ],
+],
+```
+
+The option has no effect in direct messages, where the recipient is already the sender. If the agent's reply already contains the sender's `@<number>` token, no prefix is added — the existing token is used for the mention.
 
 ### Multiple Agents
 
