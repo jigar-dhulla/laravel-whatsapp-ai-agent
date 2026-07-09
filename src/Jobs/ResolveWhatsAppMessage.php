@@ -50,6 +50,7 @@ class ResolveWhatsAppMessage implements ShouldQueue
                 $message->ts,
                 $message->getAttachments(),
                 $message->msg_id,
+                (bool) ($agentConfig['mention_sender'] ?? false),
             );
         }
     }

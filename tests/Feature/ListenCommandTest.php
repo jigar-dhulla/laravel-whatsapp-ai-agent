@@ -47,6 +47,7 @@ class ListenCommandTest extends TestCase
             'triggers' => ['agent'],
             'chats' => ['111@s.whatsapp.net'],
             'groups' => [],
+            'mention_sender' => true,
         ]]);
 
         DB::connection(WhatsAppMessageReader::CONNECTION_NAME)->table('messages')->insert([
@@ -71,7 +72,8 @@ class ListenCommandTest extends TestCase
         Bus::assertDispatched(ProcessWhatsAppMessage::class, function ($job) {
             return $job->body === 'hey agent'
                 && $job->agentClass === WhatsAppAgent::class
-                && $job->ts->getTimestamp() === 1700000001;
+                && $job->ts->getTimestamp() === 1700000001
+                && $job->mentionSender === true;
         });
     }
 

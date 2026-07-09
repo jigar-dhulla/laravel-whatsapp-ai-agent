@@ -181,8 +181,13 @@ class Wacli
      * where the original message has not been synced locally, also pass
      * $replyToSender with the original sender's JID.
      *
+     * Pass $mentions with participant JIDs (or phone numbers) to tag them.
+     * WhatsApp only renders a mention when the message text also contains
+     * "@" followed by the mentioned JID's user part.
+     *
      * Returns [success, stdout, stderr].
      *
+     * @param  array<int, string>  $mentions
      * @return array{0: bool, 1: string, 2: string}
      */
     public function send(
@@ -190,6 +195,7 @@ class Wacli
         string $message,
         ?string $replyTo = null,
         ?string $replyToSender = null,
+        array $mentions = [],
     ): array {
         $arguments = [
             'send', 'text',
@@ -205,6 +211,13 @@ class Wacli
         if ($replyToSender !== null && $replyToSender !== '') {
             $arguments[] = '--reply-to-sender';
             $arguments[] = $replyToSender;
+        }
+
+        foreach ($mentions as $mention) {
+            if ($mention !== '') {
+                $arguments[] = '--mention';
+                $arguments[] = $mention;
+            }
         }
 
         $arguments[] = '--json';

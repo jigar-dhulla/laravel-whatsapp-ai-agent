@@ -39,6 +39,9 @@ return [
     | - chats:    DM JIDs this agent listens to. MUST be non-empty unless
     |             groups is non-empty — empty scope means the agent is inactive.
     | - groups:   Group JIDs this agent listens to.
+    | - mention_sender: When true, group replies tag the sender via WhatsApp's
+    |             mention mechanism (wacli's --mention flag), so they are
+    |             notified even when the group is muted. Has no effect in DMs.
     |
     | The union of all agents' chats + groups determines which JIDs are polled.
     |
@@ -50,6 +53,7 @@ return [
             'triggers' => [], // wa:status will give you account JID which you can set trigger as. e.g., @123456789 - this enables tagging/mentions in groups
             'chats' => [], // run `php artisan wa:chats` for chat jids
             'groups' => [], // run `php artisan wa:groups` for group jids
+            'mention_sender' => false, // tag the sender in group replies so they get notified
         ],
     ],
 

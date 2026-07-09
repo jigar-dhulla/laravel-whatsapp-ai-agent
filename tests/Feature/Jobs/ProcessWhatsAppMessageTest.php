@@ -245,6 +245,168 @@ class ProcessWhatsAppMessageTest extends TestCase
         WhatsAppAgent::assertPrompted('[12345@2025-12-04 13:00:00] hey agent');
     }
 
+    public function test_it_mentions_sender_in_group_reply_when_enabled(): void
+    {
+        WhatsAppAgent::fake(['Sure thing!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: '55765939302555@lid',
+            senderName: 'Bob',
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
+            mentionSender: true,
+        );
+
+        $job->handle(new Wacli);
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $mentionIndex = array_search('--mention', $command, true);
+            $messageIndex = array_search('--message', $command, true);
+
+            return $mentionIndex !== false
+                && ($command[$mentionIndex + 1] ?? null) === '55765939302555@lid'
+                && $messageIndex !== false
+                && ($command[$messageIndex + 1] ?? null) === '@55765939302555 Sure thing!';
+        });
+    }
+
+    public function test_it_does_not_prepend_token_when_reply_already_mentions_sender(): void
+    {
+        WhatsAppAgent::fake(['Hi @55765939302555, done!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: '55765939302555@lid',
+            senderName: 'Bob',
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
+            mentionSender: true,
+        );
+
+        $job->handle(new Wacli);
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $messageIndex = array_search('--message', $command, true);
+
+            return in_array('--mention', $command, true)
+                && $messageIndex !== false
+                && ($command[$messageIndex + 1] ?? null) === 'Hi @55765939302555, done!';
+        });
+    }
+
+    public function test_it_does_not_mention_sender_in_dm(): void
+    {
+        WhatsAppAgent::fake(['Sure thing!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '111@s.whatsapp.net',
+            chatName: 'Alice',
+            senderJid: '111@s.whatsapp.net',
+            senderName: 'Alice',
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
+            mentionSender: true,
+        );
+
+        $job->handle(new Wacli);
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $messageIndex = array_search('--message', $command, true);
+
+            return ! in_array('--mention', $command, true)
+                && $messageIndex !== false
+                && ($command[$messageIndex + 1] ?? null) === 'Sure thing!';
+        });
+    }
+
+    public function test_it_does_not_mention_sender_in_group_when_disabled(): void
+    {
+        WhatsAppAgent::fake(['Sure thing!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: '55765939302555@lid',
+            senderName: 'Bob',
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
+        );
+
+        $job->handle(new Wacli);
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            $messageIndex = array_search('--message', $command, true);
+
+            return ! in_array('--mention', $command, true)
+                && $messageIndex !== false
+                && ($command[$messageIndex + 1] ?? null) === 'Sure thing!';
+        });
+    }
+
+    public function test_it_does_not_mention_sender_when_sender_jid_is_unknown(): void
+    {
+        WhatsAppAgent::fake(['Sure thing!']);
+
+        Process::fake([
+            '*doctor*' => Process::result(output: json_encode(['success' => true, 'data' => ['lock_held' => false]]), exitCode: 0),
+            '*send*' => Process::result(exitCode: 0),
+        ]);
+
+        $job = new ProcessWhatsAppMessage(
+            chatJid: '999@g.us',
+            chatName: 'Squad',
+            senderJid: null,
+            senderName: null,
+            body: 'hey agent',
+            agentClass: WhatsAppAgent::class,
+            ts: Carbon::create(2025, 12, 4, 13, 0, 0),
+            mentionSender: true,
+        );
+
+        $job->handle(new Wacli);
+
+        Process::assertRan(function ($process) {
+            $command = is_array($process->command) ? $process->command : explode(' ', $process->command);
+
+            return ! in_array('--mention', $command, true);
+        });
+    }
+
     public function test_it_uses_unknown_when_sender_jid_and_name_are_null_in_group(): void
     {
         WhatsAppAgent::fake(['ok']);

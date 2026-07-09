@@ -161,6 +161,7 @@ class ListenCommand extends Command
                     $message->ts,
                     $message->getAttachments(),
                     $message->msg_id,
+                    (bool) ($agentConfig['mention_sender'] ?? false),
                 );
 
                 // -vv: show that a job was dispatched
