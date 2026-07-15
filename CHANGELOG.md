@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.6]
 
 ### Added
  - #13 Mention the sender in group replies. Set `mention_sender => true` on an agent's config entry to tag the person the agent is responding to via wacli's `--mention` flag, so they are notified even when the group is muted. `Wacli::send()` accepts a new `$mentions` argument.
