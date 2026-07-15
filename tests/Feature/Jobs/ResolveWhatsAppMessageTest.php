@@ -135,6 +135,28 @@ class ResolveWhatsAppMessageTest extends TestCase
         Bus::assertNotDispatched(ProcessWhatsAppMessage::class);
     }
 
+    public function test_it_dispatches_when_reply_quotes_own_message_without_trigger(): void
+    {
+        $this->seedMessage(['rowid' => 1, 'msg_id' => 'BOT1', 'from_me' => 1, 'text' => 'I posted your ride (Ride #29)', 'display_text' => 'I posted your ride (Ride #29)']);
+        $this->seedMessage(['rowid' => 2, 'text' => "What's the status on this?", 'display_text' => "What's the status on this?", 'quoted_msg_id' => 'BOT1']);
+
+        config()->set('whatsapp-agent.agents', [[
+            'agent' => WhatsAppAgent::class,
+            'triggers' => ['agent'],
+            'chats' => ['111@s.whatsapp.net'],
+            'groups' => [],
+        ]]);
+
+        Bus::fake();
+
+        (new ResolveWhatsAppMessage(2))->handle();
+
+        Bus::assertDispatched(ProcessWhatsAppMessage::class, function (ProcessWhatsAppMessage $job) {
+            return $job->body === "What's the status on this?"
+                && $job->agentClass === WhatsAppAgent::class;
+        });
+    }
+
     public function test_it_returns_silently_when_row_no_longer_exists(): void
     {
         config()->set('whatsapp-agent.agents', [[
