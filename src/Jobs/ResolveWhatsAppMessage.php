@@ -37,7 +37,11 @@ class ResolveWhatsAppMessage implements ShouldQueue
 
         $body = $message->text ?: $message->display_text;
 
-        $matched = AgentRouter::fromConfig()->match((string) $message->chat_jid, $body);
+        $matched = AgentRouter::fromConfig()->match(
+            (string) $message->chat_jid,
+            $body,
+            $message->quotesOwnMessage(),
+        );
 
         foreach ($matched as $agentConfig) {
             ProcessWhatsAppMessage::dispatch(

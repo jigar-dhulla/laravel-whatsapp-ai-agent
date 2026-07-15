@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
  - #13 Mention the sender in group replies. Set `mention_sender => true` on an agent's config entry to tag the person the agent is responding to via wacli's `--mention` flag, so they are notified even when the group is muted. `Wacli::send()` accepts a new `$mentions` argument.
 
+### Fixes
+ - #29 `ResolveWhatsAppMessage` now passes `quotesOwnMessage()` into `AgentRouter::match()`, so a reply to one of the agent's own messages that omits the trigger phrase is dispatched instead of silently dropped.
+
 ## [0.2.5]
 
 ### Added
