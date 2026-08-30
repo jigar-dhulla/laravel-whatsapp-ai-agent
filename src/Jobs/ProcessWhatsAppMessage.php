@@ -34,6 +34,8 @@ class ProcessWhatsAppMessage implements ShouldQueue
         public readonly array $attachments = [],
         public readonly ?string $replyToMsgId = null,
         public readonly bool $mentionSender = false,
+        public readonly ?string $attachment = null,
+        public readonly ?string $attachmentCaption = null,
     ) {}
 
     public function handle(Wacli $wacli): void
@@ -68,6 +70,8 @@ class ProcessWhatsAppMessage implements ShouldQueue
             $reply,
             replyTo: $this->replyToMsgId,
             mentions: $mentions,
+            attachment: $this->attachment,
+            attachmentCaption: $this->attachmentCaption,
         );
 
         if (! $isOk && $errorOutput !== '') {
