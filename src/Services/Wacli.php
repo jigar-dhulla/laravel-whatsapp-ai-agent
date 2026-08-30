@@ -196,12 +196,21 @@ class Wacli
         ?string $replyTo = null,
         ?string $replyToSender = null,
         array $mentions = [],
+        ?string $attachment = null,
+        ?string $attachmentCaption = null,
     ): array {
         $arguments = [
-            'send', 'text',
-            '--to', $jid,
-            '--message', $message,
+            'send',
         ];
+        
+        $arguments[] = $attachment!=null ? 'file':'text';
+        $arguments[] = '--to';
+        $arguments[] = $jid;
+
+        if($attachment===null) {
+            $arguments[] = '--message';
+            $arguments[] = $message;
+        }
 
         if ($replyTo !== null && $replyTo !== '') {
             $arguments[] = '--reply-to';
@@ -219,6 +228,16 @@ class Wacli
                 $arguments[] = $mention;
             }
         }
+
+        if ($attachment !== null && $attachment !== '') {
+            $arguments[] = '--file';
+            $arguments[] = $attachment;
+        }
+
+        if ($attachmentCaption !== null && $attachmentCaption !== '') {
+            $arguments[] = '--caption';
+            $arguments[] = $attachmentCaption;
+        
 
         $arguments[] = '--json';
 
