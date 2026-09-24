@@ -5,165 +5,123 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/jigar-dhulla/laravel-whatsapp-ai-agent.svg)](https://packagist.org/packages/jigar-dhulla/laravel-whatsapp-ai-agent)
 [![License](https://img.shields.io/github/license/jigar-dhulla/laravel-whatsapp-ai-agent.svg)](LICENSE)
 
-An extension to the [Laravel AI SDK](https://laravel.com/docs/ai-sdk) that adds WhatsApp as an agent interface. It polls a [wacli](https://github.com/steipete/wacli) SQLite database for new messages, routes them through your configured agents (any class that implements `Laravel\Ai\Contracts\Agent`), and sends replies back via the wacli binary.
+Talk to your [Laravel AI SDK](https://laravel.com/docs/ai-sdk) agents over WhatsApp, using [wacli](https://github.com/steipete/wacli) to connect to your account.
 
-## Intro & Demo
-
-Watch the intro and demo on YouTube: [https://www.youtube.com/watch?v=XNAz-Ry2-co](https://www.youtube.com/watch?v=XNAz-Ry2-co)
+▶️ [Watch the intro & demo](https://www.youtube.com/watch?v=XNAz-Ry2-co)
 
 ## Requirements
 
-- PHP 8.3+
-- Laravel 13.0+
-- `laravel/ai` ^0.6
-- [`wacli`](https://github.com/steipete/wacli) **0.8.1+** installed and authenticated on the host
+- PHP 8.3+ and Laravel 13+
+- [`laravel/ai`](https://laravel.com/docs/ai-sdk) with an AI provider configured in `config/ai.php`
+- [`wacli`](https://github.com/steipete/wacli) **0.8.1+**, installed and logged in to WhatsApp
 
-## Installation
+## Getting Started
+
+**1. Install the package**
 
 ```bash
 composer require jigar-dhulla/laravel-whatsapp-ai-agent
 ```
 
-The package registers itself automatically via Laravel's package auto-discovery.
-
-## Setup
-
-Run the setup command to detect your wacli binary and write paths to `.env`:
+**2. Point it at wacli.** This finds your wacli binary and database and writes the paths to `.env`:
 
 ```bash
 php artisan wa:setup
 ```
 
-This will:
-1. Locate your wacli binary
-2. Run `wacli doctor` to detect your store directory
-3. Prompt for the wacli SQLite database path
-4. Write `WA_WACLI_BINARY`, `WA_WACLI_STORE`, and `WA_WACLI_DATABASE` to `.env`
-
-Then publish the config to customize your agents:
+**3. Publish the config**
 
 ```bash
 php artisan vendor:publish --tag=whatsapp-agent-config
 ```
 
-This publishes `config/whatsapp-agent.php`, which includes a default `WhatsAppAgent` ready to use. Edit the config to add your own agents or customize scopes and triggers.
-
-## Configuration
-
-### `config/whatsapp-agent.php`
-
-```php
-return [
-    'wacli' => [
-        'binary'   => env('WA_WACLI_BINARY', 'wacli'),
-        'database' => env('WA_WACLI_DATABASE'),
-        'store'    => env('WA_WACLI_STORE'),
-    ],
-
-    /*
-    | One entry per agent. The agent key must be a class that implements
-    | Laravel\Ai\Contracts\Agent (use the Promptable trait for the full SDK
-    | feature set). Provider and model are optional runtime overrides; if null,
-    | the agent class resolves them via its own #[Provider]/#[Model] attributes
-    | or config/ai.php defaults.
-    |
-    | - triggers: [] matches every message in this agent's scope
-    | - chats/groups: at least one entry total — empty scope = inactive agent
-    | - mention_sender: tag the sender in group replies so they get notified
-    */
-    'agents' => [
-        [
-            'agent'    => \JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent::class,
-            'triggers' => [],
-            'chats'    => [],
-            'groups'   => [],
-            'mention_sender' => false,
-        ],
-    ],
-
-    'polling' => [
-        'interval_seconds' => (int) env('WA_POLLING_INTERVAL', 1),
-    ],
-];
-```
-
-**AI provider configuration (API keys, default models) belongs in `config/ai.php`**, managed by `laravel/ai` — not in this package.
-
-### Environment Variables
-
-| Variable | Default | Description |
-|---|---------|---|
-| `WA_WACLI_BINARY` | `wacli` | Path to the wacli binary (0.6.0+ required) |
-| `WA_WACLI_DATABASE` | —       | Path to the wacli SQLite database (set by `wa:setup`) |
-| `WA_WACLI_STORE` | —       | Path to the wacli store directory (set by `wa:setup`) |
-| `WA_POLLING_INTERVAL` | `1`     | Seconds between database polls |
-| `WA_HISTORY_LIMIT` | `100`   | Max past messages included in agent context |
-
-### Creating Custom Agents
-
-Generate a new agent with `make:agent`:
+**4. Choose which chats the agent answers.** List your chat and group IDs (JIDs):
 
 ```bash
-php artisan make:agent CustomAgent
+php artisan wa:chats     # direct messages
+php artisan wa:groups    # groups
 ```
 
-This creates `app/Ai/Agents/CustomAgent.php`. Then add it to your published `config/whatsapp-agent.php`:
+Add them to the agent in `config/whatsapp-agent.php`. An agent with no chats and no groups stays inactive.
 
 ```php
 'agents' => [
     [
-        'agent'    => \App\Ai\Agents\CustomAgent::class,
-        'triggers' => ['@custom'],
-        'chats'    => ['111@s.whatsapp.net'],
+        'agent'    => \JigarDhulla\LaravelWhatsApp\Agents\WhatsAppAgent::class,
+        'triggers' => [],                         // [] = reply to every message
+        'chats'    => ['15551234567@s.whatsapp.net'],
         'groups'   => [],
     ],
 ],
 ```
 
-You can keep the default `WhatsAppAgent` in the config alongside your custom agents, or remove it entirely.
+**5. Run it.** Start these three processes and keep them running:
 
-#### Conversation memory
+```bash
+wacli sync --follow --refresh-contacts --refresh-groups   # sync WhatsApp → local DB
+php artisan wa:listen                                      # route new messages to agents
+php artisan queue:work                                     # run agents and send replies
+```
 
-Add the `RemembersWhatsAppConversations` trait to your agent to give it access to the full message history from the wacli SQLite database. The trait implements the Laravel AI SDK's conversation interface, so previous messages in the chat are automatically injected as context on every prompt:
+Now send a message from one of the chats you configured. Your agent will reply.
+
+> Stuck? Run `php artisan wa:status` to check that wacli is authenticated and connected, and to see how your agents are configured.
+
+## Configuration
+
+### Agent options
+
+Each entry in `agents` supports:
+
+| Key | Description |
+|---|---|
+| `agent` | Any class implementing `Laravel\Ai\Contracts\Agent` |
+| `triggers` | Phrases that activate the agent (case-insensitive). `[]` matches every message |
+| `chats` | Direct-message JIDs the agent listens to |
+| `groups` | Group JIDs the agent listens to |
+| `mention_sender` | `true` makes group replies @-mention the sender, so they get a notification. Default `false` |
+
+A message goes to **every** agent whose `chats`/`groups` include that chat **and** whose `triggers` appear in the message. Replying to one of the agent's own messages also triggers it, even without a trigger phrase.
+
+The provider, model and API keys come from `config/ai.php` or from the agent class. This package doesn't set them.
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `WA_WACLI_BINARY` | `wacli` | Path to the wacli binary (set by `wa:setup`) |
+| `WA_WACLI_DATABASE` | — | Path to the wacli SQLite database (set by `wa:setup`) |
+| `WA_WACLI_STORE` | — | Path to the wacli store directory (set by `wa:setup`) |
+| `WA_POLLING_INTERVAL` | `1` | Seconds between checks for new messages |
+| `WA_HISTORY_LIMIT` | `100` | How many past messages are sent to the agent as context |
+
+## Examples
+
+### A custom agent
+
+```bash
+php artisan make:agent SupportAgent
+```
 
 ```php
+// app/Ai/Agents/SupportAgent.php
+namespace App\Ai\Agents;
+
 use JigarDhulla\LaravelWhatsApp\Traits\RemembersWhatsAppConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Promptable;
 
-class CustomAgent implements Agent, Conversational
+class SupportAgent implements Agent, Conversational
 {
-    use Promptable;
-    use RemembersWhatsAppConversations;
+    use Promptable, RemembersWhatsAppConversations; // the trait gives the agent the chat history
+
+    public function instructions(): string
+    {
+        return 'You are a friendly support agent for Acme Inc. Keep replies short.';
+    }
 }
 ```
-
-The number of historical messages included is controlled by `WA_HISTORY_LIMIT` (default `100`). Override `maxConversationMessages()` in your agent class to set a per-agent limit.
-
-Both direct messages and group chats are supported. In groups, the agent automatically distinguishes participants so it can address each person individually.
-
-#### Mentioning the sender in group replies
-
-Set `mention_sender => true` on an agent's config entry to have its group replies tag the person it is responding to, using WhatsApp's mention mechanism (wacli's `--mention` flag). The reply is prefixed with the sender's `@<number>` token — rendered by WhatsApp as a tappable `@Name` — so they are notified even when they have muted the group:
-
-```php
-'agents' => [
-    [
-        'agent'          => \App\Ai\Agents\SupportAgent::class,
-        'triggers'       => ['@support'],
-        'chats'          => [],
-        'groups'         => ['group1@g.us'],
-        'mention_sender' => true,
-    ],
-],
-```
-
-The option has no effect in direct messages, where the recipient is already the sender. If the agent's reply already contains the sender's `@<number>` token, no prefix is added — the existing token is used for the mention.
-
-### Multiple Agents
-
-One message can match multiple agents simultaneously. Each match dispatches an independent queued job, so agents process in parallel:
 
 ```php
 // config/whatsapp-agent.php
@@ -171,95 +129,45 @@ One message can match multiple agents simultaneously. Each match dispatches an i
     [
         'agent'    => \App\Ai\Agents\SupportAgent::class,
         'triggers' => ['@support'],
-        'chats'    => ['111@s.whatsapp.net'],
-        'groups'   => ['group1@g.us'],
-    ],
-    [
-        'agent'    => \App\Ai\Agents\SalesAgent::class,
-        'triggers' => ['@sales'],
-        'chats'    => ['111@s.whatsapp.net'],
-        'groups'   => [],
-    ],
-    [
-        'agent'    => \App\Ai\Agents\BroadcastAgent::class,
-        'triggers' => [],  // empty = matches all messages in scope
         'chats'    => [],
-        'groups'   => ['announcements@g.us'],
+        'groups'   => ['120363000000000000@g.us'],
+        'mention_sender' => true,
     ],
 ],
 ```
 
-**Routing rules:**
-- A message matches an agent when its chat/group JID is in the agent's `chats` or `groups` list **and** the body contains at least one trigger phrase (case-insensitive).
-- An empty `triggers` array matches every message in scope.
-- An agent with empty `chats` **and** empty `groups` is inactive and never fires.
+### Several agents in one group
 
-## Usage
+Each agent answers only to its own trigger:
 
-### Start the wacli sync daemon
-
-```bash
-wacli sync --follow --refresh-contacts --refresh-groups
-```
-You may use a 3rd party tool to make sure this keeps running.
-
-### Start the listener
-
-```bash
-php artisan wa:listen
+```php
+'agents' => [
+    ['agent' => \App\Ai\Agents\SupportAgent::class, 'triggers' => ['@support'], 'chats' => [], 'groups' => ['team@g.us']],
+    ['agent' => \App\Ai\Agents\SalesAgent::class,   'triggers' => ['@sales'],   'chats' => [], 'groups' => ['team@g.us']],
+],
 ```
 
-Runs an infinite polling loop. Each iteration syncs new wacli messages, routes them via `AgentRouter`, and dispatches one `ProcessWhatsAppMessage` job per matched agent.
+### Answer when your number is @-mentioned
 
-```bash
-php artisan wa:listen --once          # single iteration, then exit
-php artisan wa:listen --max-iterations=10
-php artisan wa:listen -vv             # show startup config summary
-php artisan wa:listen -vvv            # show each message scanned
+Run `php artisan wa:status` to find your linked JID. Then use your number as the trigger:
+
+```php
+'triggers' => ['@15551234567'],
 ```
 
-### Check agent status
+## Commands
 
-```bash
-php artisan wa:status
-```
+| Command | Description |
+|---|---|
+| `wa:setup` | Find wacli and write its paths to `.env` |
+| `wa:status` | Show wacli connection status and your configured agents |
+| `wa:chats` / `wa:groups` | List chat and group JIDs to put in the config |
+| `wa:listen` | Start the listener. Add `--once` to run it a single time, or `-vv` to see debug output |
 
-Shows wacli auth/connection state and a summary of every configured agent — class name, provider/model, triggers, and scope.
+## Contributing
 
-### Queue worker
-
-Each matched message dispatches a `ProcessWhatsAppMessage` job. Run a queue worker alongside the listener:
-
-```bash
-php artisan queue:work
-```
-
-## How It Works
-
-```
-wacli sync  →  SQLite DB  →  WhatsAppMessageReader  →  AgentRouter
-                                                              ↓ (one job per match)
-                                                  ProcessWhatsAppMessage (queued)
-                                                              ↓
-                                                      $agent->prompt($body)
-                                                              ↓
-                                                        wacli send text
-```
-
-1. `wa:listen` runs as daemon.
-2. `WhatsAppMessageReader` fetches rows newer than the last processed rowid, filtered to the union of all agents' JIDs.
-3. `AgentRouter::match($chatJid, $body)` returns every agent config entry whose scope contains the chat and whose triggers match the message.
-4. One `ProcessWhatsAppMessage` job is dispatched per matched entry.
-5. The job resolves the agent class from the container, calls `$agent->prompt($body)`, and sends the reply via `wacli send text`.
-
-## Testing
-
-```bash
-composer install
-vendor/bin/phpunit
-vendor/bin/pint
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md). Run the tests with `composer test` and fix code style with `composer format`.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
